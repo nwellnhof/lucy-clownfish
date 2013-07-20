@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-/** Clownfish::CFC::Model::Hierarchy - A class hierarchy.
+/** A class hierarchy.
  *
  * A Clownfish::CFC::Model::Hierarchy consists of all the classes defined in
  * files within a source directory and its subdirectories.
@@ -47,12 +47,16 @@ CFCHierarchy_init(CFCHierarchy *self, const char *dest);
 void
 CFCHierarchy_destroy(CFCHierarchy *self);
 
-/** Add path C<source_dir> to the list of source directories.
+/** Add a path to the list of source directories.
+ *
+ * @param source_dir The source directory.
  */
 void
 CFCHierarchy_add_source_dir(CFCHierarchy *self, const char *source_dir);
 
-/** Add path C<include_dir> to the list of include directories.
+/** Add a path to the list of include directories.
+ *
+ * @param source_dir The include directory.
  */
 void
 CFCHierarchy_add_include_dir(CFCHierarchy *self, const char *include_dir);
@@ -93,12 +97,18 @@ CFCHierarchy_ordered_classes(CFCHierarchy *self);
 struct CFCFile**
 CFCHierarchy_files(CFCHierarchy *self);
 
+/** Accessor for source directories.
+ */
 const char**
 CFCHierarchy_get_source_dirs(CFCHierarchy *self);
 
+/** Accessor for include directories.
+ */
 const char**
 CFCHierarchy_get_include_dirs(CFCHierarchy *self);
 
+/** Accessor for destination directory.
+ */
 const char*
 CFCHierarchy_get_dest(CFCHierarchy *self);
 

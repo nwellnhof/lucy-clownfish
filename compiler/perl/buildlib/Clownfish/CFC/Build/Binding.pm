@@ -18,9 +18,36 @@ use strict;
 
 sub bind_all {
     my $class = shift;
+    $class->bind_hierarchy;
     $class->bind_perl;
     $class->bind_perlclass;
     $class->bind_perlpod;
+}
+
+sub bind_hierarchy {
+    class_from_c('CFCHierarchy', 'Clownfish::CFC::Model::Hierarchy');
+
+    my @exposed = qw(
+        Add_Source_Dir
+        Add_Include_Dir
+        Build
+        Ordered_Classes
+        Get_Source_Dirs
+        Get_Include_Dirs
+        Get_Dest
+    );
+
+    my $pod_spec = Clownfish::CFC::Binding::Perl::Pod->new;
+    $pod_spec->add_constructor( alias => 'new' );
+    $pod_spec->add_method( method => $_, alias => lc($_) ) for @exposed;
+
+    my $binding = Clownfish::CFC::Binding::Perl::Class->new(
+        parcel     => 'Clownfish',
+        class_name => 'Clownfish::CFC::Model::Hierarchy',
+    );
+    $binding->set_pod_spec($pod_spec);
+
+    Clownfish::CFC::Binding::Perl::Class->register($binding);
 }
 
 sub bind_perl {
