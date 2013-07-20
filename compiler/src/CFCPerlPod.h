@@ -28,6 +28,8 @@ typedef struct CFCPerlPod CFCPerlPod;
 struct CFCFunction;
 struct CFCClass;
 
+/** Constructor
+ */
 CFCPerlPod*
 CFCPerlPod_new(void);
 
@@ -79,6 +81,8 @@ char*
 CFCPerlPod_constructors_pod(CFCPerlPod *self, struct CFCClass *klass);
 
 /** Supply a SYNOPSIS section.
+ *
+ * @param synopsis A string containing the synopsis.
  */
 void
 CFCPerlPod_set_synopsis(CFCPerlPod *self, const char *synopsis);
@@ -89,6 +93,8 @@ const char*
 CFCPerlPod_get_synopsis(CFCPerlPod *self);
 
 /** Supply a DESCRIPTION section.
+ *
+ * @param description A string containing the description.
  */
 void
 CFCPerlPod_set_description(CFCPerlPod *self, const char *description);
