@@ -14,8 +14,7 @@
  * limitations under the License.
  */
 
-/** Clownfish::CFC::Binding::Core - Generate core C code for a
- * Clownfish::CFC::Model::Hierarchy.
+/** Generate core C code for a Clownfish::CFC::Model::Hierarchy.
  *
  * A Clownfish::CFC::Model::Hierarchy describes an abstract specifiction for a
  * class hierarchy; Clownfish::CFC::Binding::Core is responsible for
@@ -50,9 +49,11 @@ CFCBindCore_init(CFCBindCore *self, struct CFCHierarchy *hierarchy,
 void
 CFCBindCore_destroy(CFCBindCore *self);
 
-/** Call <code>CFCHierarchy_propagate_modified</code>to establish which
- * classes do not have up-to-date generated .c and .h files, then traverse the
- * hierarchy writing all necessary files.
+/** Establish which classes do not have up-to-date generated .c and .h files,
+ * then traverse the hierarchy writing all necessary files.
+ *
+ * @param modified If this argument is true, write all files without checking
+ * whether they're up-to-date.
  */
 int
 CFCBindCore_write_all_modified(CFCBindCore *self, int modified);
