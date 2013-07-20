@@ -18,8 +18,34 @@ use strict;
 
 sub bind_all {
     my $class = shift;
+    $class->bind_perl;
     $class->bind_perlclass;
     $class->bind_perlpod;
+}
+
+sub bind_perl {
+    class_from_c('CFCPerl', 'Clownfish::CFC::Binding::Perl');
+
+    my @exposed = qw(
+        Write_Pod
+        Write_Boot
+        Write_Bindings
+        Write_Callbacks
+        Write_Hostdefs
+        Write_Xs_Typemap
+    );
+
+    my $pod_spec = Clownfish::CFC::Binding::Perl::Pod->new;
+    $pod_spec->add_constructor( alias => 'new' );
+    $pod_spec->add_method( method => $_, alias => lc($_) ) for @exposed;
+
+    my $binding = Clownfish::CFC::Binding::Perl::Class->new(
+        parcel     => 'Clownfish',
+        class_name => 'Clownfish::CFC::Binding::Perl',
+    );
+    $binding->set_pod_spec($pod_spec);
+
+    Clownfish::CFC::Binding::Perl::Class->register($binding);
 }
 
 sub bind_perlclass {

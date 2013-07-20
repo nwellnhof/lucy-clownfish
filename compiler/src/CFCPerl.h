@@ -25,8 +25,7 @@ typedef struct CFCPerl CFCPerl;
 struct CFCParcel;
 struct CFCHierarchy;
 
-/** Clownfish::CFC::Binding::Perl - Perl bindings for a
- * Clownfish::CFC::Model::Hierarchy.
+/** Perl bindings for a Clownfish::CFC::Model::Hierarchy.
  * 
  * Clownfish::CFC::Binding::Perl presents an interface for auto-generating XS
  * and Perl code to bind C code for a Clownfish class hierarchy to Perl.
