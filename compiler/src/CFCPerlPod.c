@@ -210,6 +210,10 @@ CFCPerlPod_constructors_pod(CFCPerlPod *self, CFCClass *klass) {
         }
         else {
             CFCFunction *init_func = CFCClass_function(klass, slot.func);
+            if (!init_func) {
+                CFCUtil_die("Can't find function '%s' in class '%s'",
+                            slot.func, CFCClass_get_class_name(klass));
+            }
             char *sub_pod
                 = CFCPerlPod_gen_subroutine_pod(self, init_func, slot.alias, klass,
                                                 slot.sample, class_name, true);
