@@ -405,19 +405,26 @@ CFCPerlClass_create_pod(CFCPerlClass *self) {
     const char *raw_brief = CFCDocuComment_get_brief(docucom);
     char *brief = CFCPerlPod_perlify_doc_text(pod_spec, raw_brief);
 
-    // Get the class's long description.
-    const char *raw_description = CFCPerlPod_get_description(pod_spec);
-    if (!raw_description || !strlen(raw_description)) {
-        raw_description = CFCDocuComment_get_long(docucom);
-    }
-    char *description = CFCPerlPod_perlify_doc_text(pod_spec, raw_description);
-
     // Create SYNOPSIS.
     const char *raw_synopsis = CFCPerlPod_get_synopsis(pod_spec);
     char *synopsis = CFCUtil_strdup("");
     if (raw_synopsis && strlen(raw_synopsis)) {
         synopsis = CFCUtil_cat(synopsis, "=head1 SYNOPSIS\n\n", raw_synopsis,
                                "\n", NULL);
+    }
+
+    // Create DESCRIPTION.
+    const char *raw_description = CFCPerlPod_get_description(pod_spec);
+    if (!raw_description || !strlen(raw_description)) {
+        raw_description = CFCDocuComment_get_long(docucom);
+    }
+    char *description = CFCUtil_strdup("");
+    if (raw_description && strlen(raw_description)) {
+        char *desc_text
+            = CFCPerlPod_perlify_doc_text(pod_spec, raw_description);
+        description = CFCUtil_cat(description, "=head1 DESCRIPTION\n\n",
+                                  desc_text, "\n", NULL);
+        FREEMEM(desc_text);
     }
 
     // Create CONSTRUCTORS.
@@ -470,8 +477,6 @@ CFCPerlClass_create_pod(CFCPerlClass *self) {
     "%s - %s\n"
     "\n"
     "%s\n"
-    "\n"
-    "=head1 DESCRIPTION\n"
     "\n"
     "%s\n"
     "\n"
