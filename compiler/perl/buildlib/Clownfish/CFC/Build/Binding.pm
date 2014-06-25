@@ -18,6 +18,46 @@ use strict;
 
 sub bind_all {
     my $class = shift;
+    $class->bind_perlclass;
+}
+
+sub bind_perlclass {
+    class_from_c('CFCPerlClass', 'Clownfish::CFC::Binding::Perl::Class');
+
+    my @exposed = qw(
+        Add_To_Registry
+        Bind_Constructor
+        Bind_Method
+        Exclude_Constructor
+        Exclude_Method
+        Create_Pod
+        Get_Client
+        Get_Class_Name
+        Append_Xs
+        Get_Xs_Code
+        Set_Pod_Spec
+        Get_Pod_Spec
+    );
+    # TODO: Generate docs for functions
+    #my @exposed_functions = qw(
+    #    singleton
+    #    registry
+    #    clear_registry
+    #    method_bindings
+    #    constructor_bindings
+    #);
+
+    my $pod_spec = Clownfish::CFC::Binding::Perl::Pod->new;
+    $pod_spec->add_constructor( alias => 'new' );
+    $pod_spec->add_method( method => $_, alias => lc($_) ) for @exposed;
+
+    my $binding = Clownfish::CFC::Binding::Perl::Class->new(
+        parcel     => 'Clownfish',
+        class_name => 'Clownfish::CFC::Binding::Perl::Class',
+    );
+    $binding->set_pod_spec($pod_spec);
+
+    Clownfish::CFC::Binding::Perl::Class->register($binding);
 }
 
 # Quick and dirty hack to create a CFC class from a C header.

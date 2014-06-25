@@ -29,8 +29,7 @@ struct CFCPerlPod;
 struct CFCPerlMethod;
 struct CFCPerlConstructor;
 
-/** Clownfish::CFC::Binding::Perl::Class - Generate Perl binding code for a
- * Clownfish::CFC::Model::Class.
+/** Generate Perl binding code for a Clownfish::CFC::Model::Class.
  */
 
 /** 
@@ -90,6 +89,8 @@ CFCPerlClass_bind_constructor(CFCPerlClass *self, const char *alias,
                               const char *initializer);
 
 /** Block the automatic generation of a method binding.
+ *
+ * @param method The Clownfish name for the method.
  */
 void
 CFCPerlClass_exclude_method(CFCPerlClass *self, const char *method);
@@ -128,6 +129,8 @@ const char*
 CFCPerlClass_get_class_name(CFCPerlClass *self);
 
 /** Concatenate verbatim XS code.
+ *
+ * @param xs A string containing the XS code.
  */
 void
 CFCPerlClass_append_xs(CFCPerlClass *self, const char *xs);
@@ -139,6 +142,8 @@ CFCPerlClass_get_xs_code(CFCPerlClass *self);
 
 /** Supply a specification which will cause POD to be generated for this class
  * binding.
+ *
+ * @param method A Clownfish::CFC::Binding::Perl::Pod object.
  */
 void
 CFCPerlClass_set_pod_spec(CFCPerlClass *self, struct CFCPerlPod *pod_spec);
