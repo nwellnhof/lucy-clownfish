@@ -266,7 +266,17 @@ sub class_from_c {
             $class->add_method($method);
         }
         else {
-            $name = 'init' if $name eq 'new';
+            if ($name eq 'new') {
+                $name = 'init';
+
+                # Add 'self' parameter.
+                if ($c_params =~ /^\(\s*\)$/) {
+                    $c_params = "($cfc_class_name *self)";
+                }
+                else {
+                    $c_params =~ s/^\(/($cfc_class_name *self, /;
+                }
+            }
 
             my $param_list = $parser->parse($c_params)
                 or die("Invalid param list: $c_params");
