@@ -143,7 +143,7 @@ CFCPerlClass_get_xs_code(CFCPerlClass *self);
 /** Supply a specification which will cause POD to be generated for this class
  * binding.
  *
- * @param method A Clownfish::CFC::Binding::Perl::Pod object.
+ * @param pod_spec A Clownfish::CFC::Binding::Perl::Pod object.
  */
 void
 CFCPerlClass_set_pod_spec(CFCPerlClass *self, struct CFCPerlPod *pod_spec);
