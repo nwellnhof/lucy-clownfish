@@ -56,7 +56,7 @@ CFCHierarchy_add_source_dir(CFCHierarchy *self, const char *source_dir);
 
 /** Add a path to the list of include directories.
  *
- * @param source_dir The include directory.
+ * @param include_dir The include directory.
  */
 void
 CFCHierarchy_add_include_dir(CFCHierarchy *self, const char *include_dir);
