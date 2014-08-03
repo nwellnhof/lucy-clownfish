@@ -66,6 +66,13 @@ test_all(TestBatchRunner *runner) {
     TEST_TRUE(runner, LFReg_Fetch(registry, (Obj*)baz) == NULL,
               "Fetch() non-existent key returns NULL");
 
+    LockFreeRegistry *twin = LFReg_Clone(registry);
+    Obj *twin_entry = LFReg_Fetch(twin, (Obj*)foo);
+    TEST_TRUE(runner, twin_entry != NULL, "Fetch() from clone");
+    TEST_TRUE(runner, Obj_Equals(twin_entry, (Obj*)foo),
+              "Fetch() from clone returns equal entry");
+    TEST_TRUE(runner, twin_entry != (Obj*)foo, "Clone() performs deep clone");
+
     DECREF(foo_dupe);
     DECREF(baz);
     DECREF(bar);
@@ -75,7 +82,7 @@ test_all(TestBatchRunner *runner) {
 
 void
 TestLFReg_Run_IMP(TestLockFreeRegistry *self, TestBatchRunner *runner) {
-    TestBatchRunner_Plan(runner, (TestBatch*)self, 6);
+    TestBatchRunner_Plan(runner, (TestBatch*)self, 9);
     test_all(runner);
 }
 

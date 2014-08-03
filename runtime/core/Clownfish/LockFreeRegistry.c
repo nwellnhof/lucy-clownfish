@@ -106,6 +106,29 @@ LFReg_Fetch_IMP(LockFreeRegistry *self, Obj *key) {
     return NULL;
 }
 
+LockFreeRegistry*
+LFReg_Clone_IMP(LockFreeRegistry *self) {
+    size_t             capacity = self->capacity;
+    LFRegEntry       **entries  = (LFRegEntry**)self->entries;
+    LockFreeRegistry  *twin     = LFReg_new(capacity);
+
+    for (size_t i = 0; i < capacity; ++i) {
+        LFRegEntry *entry = entries[i];
+
+        while (entry) {
+            Obj *key   = Obj_Clone(entry->key);
+            Obj *value = Obj_Clone(entry->value);
+            LFReg_Register(twin, key, value);
+            DECREF(key);
+            DECREF(value);
+
+            entry = entry->next;
+        }
+    }
+
+    return twin;
+}
+
 void
 LFReg_Destroy_IMP(LockFreeRegistry *self) {
     LFRegEntry **entries = (LFRegEntry**)self->entries;

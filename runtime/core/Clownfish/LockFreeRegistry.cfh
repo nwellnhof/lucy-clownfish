@@ -29,17 +29,20 @@ class Clownfish::LockFreeRegistry nickname LFReg inherits Clownfish::Obj {
     inert LockFreeRegistry*
     init(LockFreeRegistry *self, size_t capacity);
 
-    public void
-    Destroy(LockFreeRegistry *self);
-
     bool
     Register(LockFreeRegistry *self, Obj *key, Obj *value);
 
     nullable Obj*
     Fetch(LockFreeRegistry *self, Obj *key);
 
+    public incremented LockFreeRegistry*
+    Clone(LockFreeRegistry *self);
+
     void*
     To_Host(LockFreeRegistry *self);
+
+    public void
+    Destroy(LockFreeRegistry *self);
 }
 
 
