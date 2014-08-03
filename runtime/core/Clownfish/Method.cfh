@@ -46,6 +46,9 @@ class Clownfish::Method inherits Clownfish::Obj {
     incremented String*
     Host_Name(Method *self);
 
+    public incremented Method*
+    Clone(Method *self);
+
     incremented Obj*
     Inc_RefCount(Method *self);
 

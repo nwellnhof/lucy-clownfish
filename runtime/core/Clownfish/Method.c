@@ -31,12 +31,25 @@ Method_new(String *name, cfish_method_t callback_func, size_t offset) {
 Method*
 Method_init(Method *self, String *name, cfish_method_t callback_func,
             size_t offset) {
-    self->name          = Str_Clone(name);
+    self->name          = (String*)INCREF(name);
     self->host_alias    = NULL;
     self->callback_func = callback_func;
     self->offset        = offset;
     self->is_excluded   = false;
     return self;
+}
+
+Method*
+Method_Clone_IMP(Method *self) {
+    String *name  = Str_Clone(self->name);
+    Method *twin = Method_new(name, self->callback_func, self->offset);
+    DECREF(name);
+
+    if (self->host_alias) {
+        twin->host_alias = Str_Clone(self->host_alias);
+    }
+
+    return twin;
 }
 
 void
