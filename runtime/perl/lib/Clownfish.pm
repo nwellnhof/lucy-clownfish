@@ -77,6 +77,8 @@ sub error {$Clownfish::Err::error}
     our $VERSION = '0.003000';
     $VERSION = eval $VERSION;
     no warnings 'redefine';
+    # Clone LFReg manually.
+    sub CLONE_SKIP { 0; }
     sub DESTROY { }    # leak all
 }
 

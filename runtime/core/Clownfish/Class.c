@@ -355,6 +355,32 @@ Class_fetch_class(String *class_name) {
     return (Class*)LFReg_Fetch(registry, (Obj*)class_name);
 }
 
+LockFreeRegistry*
+Class_clone_registry(LockFreeRegistry *registry) {
+    LockFreeRegistry *twin  = LFReg_Clone(registry);
+    LFRegIterator    *iter  = LFRegIter_new(twin);
+    Obj              *value = NULL;
+
+    // Fix up parent pointers.
+    while (LFRegIter_Next(iter, NULL, &value)) {
+        Class  *klass       = (Class*)value;
+        Class  *orig_parent = klass->parent;
+
+        if (orig_parent) {
+            String *parent_name = Class_Get_Name(orig_parent);
+            Class  *twin_parent = (Class*)LFReg_Fetch(twin, (Obj*)parent_name);
+            if (!twin_parent) {
+                THROW(ERR, "Class '%o' not found in cloned registry",
+                      parent_name);
+            }
+            klass->parent = twin_parent;
+        }
+    }
+    DECREF(iter);
+
+    return twin;
+}
+
 void
 Class_Add_Host_Method_Alias_IMP(Class *self, const char *alias,
                              const char *meth_name) {

@@ -616,6 +616,30 @@ CODE:
     RETVAL = (SV*)CFISH_Class_To_Host(singleton);
 }
 OUTPUT: RETVAL
+
+void
+CLONE(class_sv, ...)
+    SV *class_sv;
+PPCODE:
+{
+    const char *class_name = SvPV_nolen(class_sv);
+
+    if (strcmp(class_name, "Clownfish::Class") == 0) {
+        SV *registry_sv = get_sv("Clownfish::Class::_registry", 0);
+
+        if (registry_sv) {
+            cfish_LockFreeRegistry *registry;
+            SV *new_sv;
+
+            registry = (cfish_LockFreeRegistry*)XSBind_sv_to_cfish_obj(
+                    registry_sv, CFISH_LOCKFREEREGISTRY, NULL);
+            registry = cfish_Class_clone_registry(registry);
+            new_sv = CFISH_Obj_To_Host((cfish_Obj*)registry);
+            sv_setsv(registry_sv, new_sv);
+            SvREFCNT_dec(new_sv);
+        }
+    }
+}
 END_XS_CODE
 
     my $binding = Clownfish::CFC::Binding::Perl::Class->new(
