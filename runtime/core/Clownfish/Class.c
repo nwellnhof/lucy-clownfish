@@ -180,7 +180,8 @@ Class_Clone_IMP(Class *self) {
 
     memcpy(twin, self, self->class_alloc_size);
     Class_Init_Obj(self->klass, twin); // Set refcount.
-    twin->name = Str_Clone(self->name);
+    twin->name    = Str_Clone(self->name);
+    twin->methods = VA_Clone(self->methods);
 
     return twin;
 }
