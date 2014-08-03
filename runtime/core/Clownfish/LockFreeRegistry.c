@@ -15,6 +15,7 @@
  */
 
 #define C_CFISH_LOCKFREEREGISTRY
+#define C_CFISH_LFREGITERATOR
 #define CFISH_USE_SHORT_NAMES
 
 #include "Clownfish/LockFreeRegistry.h"
@@ -148,4 +149,54 @@ LFReg_Destroy_IMP(LockFreeRegistry *self) {
     SUPER_DESTROY(self, LOCKFREEREGISTRY);
 }
 
+/**********************************************************************/
+
+LFRegIterator*
+LFRegIter_new(LockFreeRegistry *registry) {
+    LFRegIterator *self = (LFRegIterator*)Class_Make_Obj(LFREGITERATOR);
+    return LFRegIter_init(self, registry);
+}
+
+LFRegIterator*
+LFRegIter_init(LFRegIterator *self, LockFreeRegistry *registry) {
+    self->registry = (LockFreeRegistry*)INCREF(registry);
+    self->tick     = 0;     // Next tick.
+    self->entry    = NULL;  // Previous entry.
+    return self;
+}
+
+bool
+LFRegIter_Next_IMP(LFRegIterator *self, Obj **key, Obj**value) {
+    size_t      tick  = self->tick;
+    LFRegEntry *entry = (LFRegEntry*)self->entry;
+
+    if (entry) {
+        entry = entry->next;
+    }
+
+    LockFreeRegistry  *registry = self->registry;
+    size_t             capacity = registry->capacity;
+    LFRegEntry       **entries  = registry->entries;
+
+    while (!entry && tick < capacity) {
+        entry = entries[tick++];
+    }
+
+    self->tick  = tick;
+    self->entry = entry;
+
+    if (!entry) { return false; }
+
+    if (key)   { *key   = entry->key;   }
+    if (value) { *value = entry->value; }
+
+    return true;
+}
+
+void
+LFRegIter_Destroy_IMP(LFRegIterator *self) {
+    DECREF(self->registry);
+
+    SUPER_DESTROY(self, LFREGITERATOR);
+}
 

@@ -45,4 +45,21 @@ class Clownfish::LockFreeRegistry nickname LFReg inherits Clownfish::Obj {
     Destroy(LockFreeRegistry *self);
 }
 
+class Clownfish::LFRegIterator nickname LFRegIter inherits Clownfish::Obj {
+    LockFreeRegistry *registry;
+    size_t            tick;
+    void             *entry;
+
+    inert incremented LFRegIterator*
+    new(LockFreeRegistry *registry);
+
+    inert LFRegIterator*
+    init(LFRegIterator *self, LockFreeRegistry *registry);
+
+    public bool
+    Next(LFRegIterator *self, Obj **key, Obj**value);
+
+    public void
+    Destroy(LFRegIterator *self);
+}
 
