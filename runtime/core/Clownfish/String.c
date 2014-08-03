@@ -310,7 +310,7 @@ Str_To_Utf8_IMP(String *self) {
 
 String*
 Str_Clone_IMP(String *self) {
-    return (String*)INCREF(self);
+    return Str_new_from_trusted_utf8(self->ptr, self->size);
 }
 
 String*
