@@ -572,12 +572,9 @@ sub bind_class {
 MODULE = Clownfish   PACKAGE = Clownfish::Class
 
 SV*
-_get_registry()
+_get_registry(...)
 CODE:
-    if (cfish_Class_registry == NULL) {
-        cfish_Class_init_registry();
-    }
-    RETVAL = (SV*)CFISH_Obj_To_Host((cfish_Obj*)cfish_Class_registry);
+    RETVAL = SvREFCNT_inc(get_sv("Clownfish::Class::_registry", GV_ADD));
 OUTPUT: RETVAL
 
 SV*

@@ -50,8 +50,6 @@ S_find_method(Class *self, const char *meth_name);
 static int32_t
 S_claim_parcel_id(void);
 
-LockFreeRegistry *Class_registry = NULL;
-
 void
 Class_bootstrap(const ClassSpec *specs, size_t num_specs)
 {
@@ -140,7 +138,6 @@ Class_bootstrap(const ClassSpec *specs, size_t num_specs)
      *
      * Pass 3:
      * - Inititalize name and method array.
-     * - Register class.
      */
     for (size_t i = 0; i < num_specs; ++i) {
         const ClassSpec *spec = &specs[i];
@@ -157,8 +154,17 @@ Class_bootstrap(const ClassSpec *specs, size_t num_specs)
             VA_Push(klass->methods, (Obj*)method);
             DECREF(name);
         }
+    }
 
-        Class_add_to_registry(klass);
+    /* Pass 4:
+     * - Register class.
+     */
+    LockFreeRegistry *registry = Class_get_registry();
+    for (size_t i = 0; i < num_specs; ++i) {
+        const ClassSpec *spec = &specs[i];
+        Class *klass = *spec->klass;
+
+        LFReg_Register(registry, (Obj*)klass->name, (Obj*)klass);
     }
 }
 
@@ -235,24 +241,11 @@ Class_Get_Methods_IMP(Class *self) {
     return self->methods;
 }
 
-void
-Class_init_registry() {
-    LockFreeRegistry *reg = LFReg_new(256);
-    if (Atomic_cas_ptr((void*volatile*)&Class_registry, NULL, reg)) {
-        return;
-    }
-    else {
-        DECREF(reg);
-    }
-}
-
 Class*
 Class_singleton(String *class_name, Class *parent) {
-    if (Class_registry == NULL) {
-        Class_init_registry();
-    }
+    LockFreeRegistry *registry = Class_get_registry();
 
-    Class *singleton = (Class*)LFReg_Fetch(Class_registry, (Obj*)class_name);
+    Class *singleton = (Class*)LFReg_Fetch(registry, (Obj*)class_name);
     if (singleton == NULL) {
         VArray *fresh_host_methods;
         uint32_t num_fresh;
@@ -311,7 +304,7 @@ Class_singleton(String *class_name, Class *parent) {
         }
         else {
             DECREF(singleton);
-            singleton = (Class*)LFReg_Fetch(Class_registry, (Obj*)class_name);
+            singleton = (Class*)LFReg_Fetch(registry, (Obj*)class_name);
             if (!singleton) {
                 THROW(ERR, "Failed to either insert or fetch Class for '%o'",
                       class_name);
@@ -324,16 +317,14 @@ Class_singleton(String *class_name, Class *parent) {
 
 bool
 Class_add_to_registry(Class *klass) {
-    if (Class_registry == NULL) {
-        Class_init_registry();
-    }
-    if (LFReg_Fetch(Class_registry, (Obj*)klass->name)) {
+    LockFreeRegistry *registry = Class_get_registry();
+
+    if (LFReg_Fetch(registry, (Obj*)klass->name)) {
         return false;
     }
     else {
         String *class_name = Str_Clone(klass->name);
-        bool retval
-            = LFReg_Register(Class_registry, (Obj*)class_name, (Obj*)klass);
+        bool retval = LFReg_Register(registry, (Obj*)class_name, (Obj*)klass);
         DECREF(class_name);
         return retval;
     }
@@ -342,17 +333,15 @@ Class_add_to_registry(Class *klass) {
 bool
 Class_add_alias_to_registry(Class *klass, const char *alias_ptr,
                              size_t alias_len) {
-    if (Class_registry == NULL) {
-        Class_init_registry();
-    }
+    LockFreeRegistry *registry = Class_get_registry();
+
     StackString *alias = SSTR_WRAP_UTF8(alias_ptr, alias_len);
-    if (LFReg_Fetch(Class_registry, (Obj*)alias)) {
+    if (LFReg_Fetch(registry, (Obj*)alias)) {
         return false;
     }
     else {
         String *class_name = SStr_Clone(alias);
-        bool retval
-            = LFReg_Register(Class_registry, (Obj*)class_name, (Obj*)klass);
+        bool retval = LFReg_Register(registry, (Obj*)class_name, (Obj*)klass);
         DECREF(class_name);
         return retval;
     }
@@ -360,11 +349,9 @@ Class_add_alias_to_registry(Class *klass, const char *alias_ptr,
 
 Class*
 Class_fetch_class(String *class_name) {
-    Class *klass = NULL;
-    if (Class_registry != NULL) {
-        klass = (Class*)LFReg_Fetch(Class_registry, (Obj*)class_name);
-    }
-    return klass;
+    LockFreeRegistry *registry = Class_get_registry();
+
+    return (Class*)LFReg_Fetch(registry, (Obj*)class_name);
 }
 
 void

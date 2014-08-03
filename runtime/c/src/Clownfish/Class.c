@@ -23,8 +23,20 @@
 #include "Clownfish/Class.h"
 #include "Clownfish/String.h"
 #include "Clownfish/Err.h"
+#include "Clownfish/LockFreeRegistry.h"
 #include "Clownfish/Util/Memory.h"
 #include "Clownfish/VArray.h"
+
+static LockFreeRegistry *class_registry = NULL;
+
+LockFreeRegistry*
+Class_get_registry() {
+    if (class_registry == NULL) {
+        class_registry = LFReg_new(256);
+    }
+
+    return class_registry;
+}
 
 Obj*
 Class_Make_Obj_IMP(Class *self) {

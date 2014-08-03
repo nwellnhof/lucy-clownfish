@@ -675,6 +675,25 @@ CFISH_Obj_To_Host_IMP(cfish_Obj *self) {
 
 /*************************** Clownfish::Class ******************************/
 
+cfish_LockFreeRegistry*
+cfish_Class_get_registry() {
+    SV *registry_sv = get_sv("Clownfish::Class::_registry", GV_ADD);
+    cfish_LockFreeRegistry *registry;
+
+    if (!SvOK(registry_sv)) {
+        registry = cfish_LFReg_new(256);
+        SV *new_sv = CFISH_Obj_To_Host((cfish_Obj*)registry);
+        sv_setsv(registry_sv, new_sv);
+        SvREFCNT_dec(new_sv);
+    }
+    else {
+        registry = (cfish_LockFreeRegistry*)XSBind_sv_to_cfish_obj(registry_sv, 
+                CFISH_LOCKFREEREGISTRY, NULL);
+    }
+
+    return registry;
+}
+
 cfish_Obj*
 CFISH_Class_Make_Obj_IMP(cfish_Class *self) {
     cfish_Obj *obj

@@ -34,7 +34,6 @@ class Clownfish::Class inherits Clownfish::Obj {
     VArray            *methods;
     cfish_method_t[1]  vtable; /* flexible array */
 
-    inert LockFreeRegistry *registry;
     inert size_t offset_of_parent;
 
     inert void
@@ -51,6 +50,11 @@ class Clownfish::Class inherits Clownfish::Obj {
     inert Class*
     singleton(String *class_name, Class *parent);
 
+    /* Return the global class registry, creating it if necessary.
+     */
+    inert LockFreeRegistry*
+    get_registry();
+
     /** Register a class, so that it can be retrieved by class name.
      *
      * TODO: Move this functionality to some kind of class loader.
@@ -63,11 +67,6 @@ class Clownfish::Class inherits Clownfish::Obj {
     inert bool
     add_alias_to_registry(Class *klass, const char *alias_ptr,
                           size_t alias_len);
-
-    /** Initialize the registry.
-     */
-    inert void
-    init_registry();
 
     /** Tell the host about the new class.
      */
