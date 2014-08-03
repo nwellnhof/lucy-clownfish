@@ -775,18 +775,6 @@ cfish_Class_find_parent_class(cfish_String *class_name) {
     return parent_class;
 }
 
-void*
-CFISH_Class_To_Host_IMP(cfish_Class *self) {
-    bool first_time = self->ref.count & XSBIND_REFCOUNT_FLAG ? true : false;
-    CFISH_Class_To_Host_t to_host
-        = CFISH_SUPER_METHOD_PTR(CFISH_CLASS, CFISH_Class_To_Host);
-    SV *host_obj = (SV*)to_host(self);
-    if (first_time) {
-        SvSHARE((SV*)self->ref.host_obj);
-    }
-    return host_obj;
-}
-
 
 /*************************** Clownfish::Method ******************************/
 
@@ -962,19 +950,5 @@ cfish_Err_trap(CFISH_Err_Attempt_t routine, void *context) {
     LEAVE;
 
     return error;
-}
-
-/*********************** Clownfish::LockFreeRegistry ************************/
-
-void*
-CFISH_LFReg_To_Host_IMP(cfish_LockFreeRegistry *self) {
-    bool first_time = self->ref.count & XSBIND_REFCOUNT_FLAG ? true : false;
-    CFISH_LFReg_To_Host_t to_host
-        = CFISH_SUPER_METHOD_PTR(CFISH_LOCKFREEREGISTRY, CFISH_LFReg_To_Host);
-    SV *host_obj = (SV*)to_host(self);
-    if (first_time) {
-        SvSHARE((SV*)self->ref.host_obj);
-    }
-    return host_obj;
 }
 
