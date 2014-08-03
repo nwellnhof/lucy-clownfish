@@ -16,6 +16,7 @@
 
 #define C_CFISH_HASH
 #define C_CFISH_HASHTOMBSTONE
+#define C_CFISH_OBJ
 #define CFISH_USE_SHORT_NAMES
 
 #include <string.h>
@@ -166,7 +167,13 @@ Obj*
 Hash_Make_Key_IMP(Hash *self, Obj *key, int32_t hash_sum) {
     UNUSED_VAR(self);
     UNUSED_VAR(hash_sum);
-    return Obj_Clone(key);
+    if (key->klass == STRING || key->klass == STACKSTRING) {
+        // Strings are immutable.
+        return INCREF(key);
+    }
+    else {
+        return Obj_Clone(key);
+    }
 }
 
 Obj*
