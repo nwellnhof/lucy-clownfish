@@ -41,7 +41,7 @@ Clownfish::Vector - Variable-sized array.
 
     my $vector = Clownfish::Vector->new( capacity => 256 );
 
-Initialize a Vector.
+Return a new Vector.
 
 =over
 

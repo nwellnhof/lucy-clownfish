@@ -40,9 +40,9 @@ Clownfish::CharBuf - Growable buffer holding Unicode characters.
 
 =head2 new
 
-    my $buf = Clownfish::CharBuf->new( size => 256 );
+    my $buf = Clownfish::CharBuf->new( capacity => 256 );
 
-Initialize a CharBuf.
+Return a new CharBuf.
 
 =over
 

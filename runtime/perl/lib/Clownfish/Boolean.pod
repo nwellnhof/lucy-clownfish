@@ -49,8 +49,8 @@ C<$false_singleton> which are exported on demand.
 
     my $bool = Clownfish::Boolean->singleton($truth_value);
 
-Return a Boolean singleton representing either true or false depending
-on the supplied truth value.
+Return either C<$true_singleton> or C<$false_singleton> depending on the
+supplied value.
 
 =head1 METHODS
 

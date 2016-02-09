@@ -40,7 +40,15 @@ Clownfish::Integer - Immutable 64-bit signed integer.
 
     my $integer = Clownfish::Integer->new($value);
 
-Create an Integer containing the passed-in value.
+Return a new Integer.
+
+=over
+
+=item *
+
+B<value> - Initial value.
+
+=back
 
 =head1 METHODS
 

@@ -44,7 +44,8 @@ behavior of Classes.)
 
     my $class = Clownfish::Class->fetch_class($class_name);
 
-Find a registered class.  May return undef if the class is not registered.
+Find a registered class.  May return undef if the class is not
+registered.
 
 =head2 singleton
 

@@ -43,7 +43,7 @@ Clownfish::HashIterator - Hashtable Iterator.
 
     my $iter = Clownfish::HashIterator->new($hash);
 
-Return a HashIterator for the passed-in Hash.
+Return a HashIterator for C<hash>.
 
 =head1 METHODS
 

@@ -43,7 +43,7 @@ Values are stored by reference and may be any kind of Obj.
 
     my $hash = Clownfish::Hash->new( capacity => 256 );
 
-Initialize a Hash.
+Return a new Hash.
 
 =over
 

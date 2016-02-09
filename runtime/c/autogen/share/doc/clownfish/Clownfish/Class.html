@@ -112,6 +112,16 @@ will be created using <code>parent</code> as a base.</p>
 <p>If <code>parent</code> is NULL, an attempt will be made to find it.  If the
 attempt fails, an error will result.</p>
 </dd>
+<dt id="func_fetch_class">fetch_class</dt>
+<dd>
+<pre><code><span class="prefix">cfish_</span>Class*
+<span class="prefix">cfish_</span><strong>Class_fetch_class</strong>(
+    <span class="prefix">cfish_</span><a href="../Clownfish/String.html">String</a> *<strong>class_name</strong>
+);
+</code></pre>
+<p>Find a registered class.  May return NULL if the class is not
+registered.</p>
+</dd>
 </dl>
 <h2>Methods</h2>
 <dl>
