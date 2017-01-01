@@ -122,25 +122,52 @@ S_prep_start(CFCParcel *parcel, const char *name, CFCClass *invoker,
             nullable = true;
         }
 
-        const char *class_var = NULL;
         const char *struct_name = CFCType_get_specifier(type);
-        if (CFCType_cfish_obj(type)) {
-            class_var = "CFISH_OBJ";
-        }
-        else if (CFCType_cfish_string(type)) {
-            class_var = "CFISH_STRING";
-        }
-        else if (CFCType_cfish_vector(type)) {
-            class_var = "CFISH_VECTOR";
-        }
-        else if (CFCType_cfish_blob(type)) {
-            class_var = "CFISH_BLOB";
-        }
-        else if (CFCType_cfish_hash(type)) {
-            class_var = "CFISH_HASH";
+        char *conversion = NULL;
+
+        if (!(targ == IS_METHOD && i == 0)) {
+            if (CFCType_cfish_obj(type)) {
+                char pattern[] =
+                    "\t%sCF := (*C.%s)(%sGoToClownfish(%s, %s))\n";
+                conversion = CFCUtil_sprintf(pattern, go_name, struct_name,
+                                                   clownfish_dot, go_name,
+                                                   nullable ? "true" : "false");
+            }
+            else if (CFCType_cfish_string(type)) {
+                char pattern[] =
+                    "\t%sCF := (*C.%s)(%sGoToString(%s))\n";
+                conversion = CFCUtil_sprintf(pattern, go_name, struct_name,
+                                             clownfish_dot, go_name);
+            }
+            else if (CFCType_cfish_vector(type)) {
+                char pattern[] =
+                    "\t%sCF := (*C.%s)(%sGoToVector(%s))\n";
+                conversion = CFCUtil_sprintf(pattern, go_name, struct_name,
+                                             clownfish_dot, go_name);
+            }
+            else if (CFCType_cfish_blob(type)) {
+                char pattern[] =
+                    "\t%sCF := (*C.%s)(%sGoToBlob(%s))\n";
+                conversion = CFCUtil_sprintf(pattern, go_name, struct_name,
+                                             clownfish_dot, go_name);
+            }
+            else if (CFCType_cfish_hash(type)) {
+                char pattern[] =
+                    "\t%sCF := (*C.%s)(%sGoToHash(%s))\n";
+                conversion = CFCUtil_sprintf(pattern, go_name, struct_name,
+                                             clownfish_dot, go_name);
+            }
         }
 
-        if (class_var == NULL || (targ == IS_METHOD && i == 0)) {
+        if (conversion != NULL) {
+            if (!CFCType_decremented(type)) {
+                conversion
+                    = CFCUtil_cat(conversion,
+                                  "\tdefer C.cfish_decref(unsafe.Pointer(",
+                                  go_name, "CF))\n", NULL);
+            }
+        }
+        else {
             // Just unwrap -- don't convert.
             char *unwrapped;
             if (nullable) {
@@ -159,28 +186,14 @@ S_prep_start(CFCParcel *parcel, const char *name, CFCClass *invoker,
                 unwrapped = temp;
             }
 
-            char *conversion
+            conversion
                 = CFCUtil_sprintf("\t%sCF := (*C.%s)(%s)\n", go_name,
                                   struct_name, unwrapped);
-            converted = CFCUtil_cat(converted, conversion, NULL);
-            FREEMEM(conversion);
             FREEMEM(unwrapped);
-            continue;
         }
 
-        char pattern[] =
-            "\t%sCF := (*C.%s)(%sGoToClownfish(%s, unsafe.Pointer(C.%s), %s))\n";
-        char *conversion = CFCUtil_sprintf(pattern, go_name, struct_name,
-                                           clownfish_dot, go_name,
-                                           class_var,
-                                           nullable ? "true" : "false");
         converted = CFCUtil_cat(converted, conversion, NULL);
         FREEMEM(conversion);
-        if (!CFCType_decremented(type)) {
-            converted = CFCUtil_cat(converted,
-                                    "\tdefer C.cfish_decref(unsafe.Pointer(",
-                                    go_name, "CF))\n", NULL);
-        }
     }
 
     char *ret_type_str;

@@ -77,14 +77,14 @@ func TestVectorToGo(t *testing.T) {
 	vec := NewVector(3)
 	vec.Push(NewString("foo"))
 	vec.Push(NewInteger(42))
-	//vec.Push(nil)
+	vec.Push(nil)
 	inner := NewVector(1)
 	inner.Push(NewString("bar"))
 	vec.Push(inner)
 	expected := []interface{}{
 		"foo",
 		int64(42),
-		//nil,
+		nil,
 		[]interface{}{"bar"},
 	}
 	got := VectorToGo(unsafe.Pointer(vec.TOPTR()))
@@ -97,7 +97,7 @@ func TestHashToGo(t *testing.T) {
 	hash.Store("bool", NewBoolean(false))
 	hash.Store("float", NewFloat(-0.5))
 	hash.Store("int", NewInteger(42))
-	//hash.Store("nil", nil)
+	hash.Store("nil", nil)
 	vec := NewVector(1)
 	vec.Push(NewString("bar"))
 	hash.Store("vector", vec)
@@ -108,7 +108,7 @@ func TestHashToGo(t *testing.T) {
 		"bool":  false,
 		"float": -0.5,
 		"int":   int64(42),
-		//"nil": nil,
+		"nil": nil,
 		"vector": []interface{}{"bar"},
 	}
 	deepCheck(t, got, expected)
@@ -122,21 +122,43 @@ func TestNilToGo(t *testing.T) {
 }
 
 func TestGoToNil(t *testing.T) {
-	if GoToClownfish(nil, nil, true) != nil {
+	if GoToClownfish(nil, true) != nil {
 		t.Error("Convert nullable nil successfully")
 	}
 }
 
 func TestGoToNilNotNullable(t *testing.T) {
 	defer func() { recover() }()
-	GoToClownfish(nil, nil, false)                   // should panic
+	GoToClownfish(nil, false)                        // should panic
 	t.Error("Non-nullable nil should trigger error") // should be unreachable
 }
 
 func TestGoToString(t *testing.T) {
+	var got Obj
+
 	strings := []string{"foo", "", "z\u0000z"}
 	for _, val := range strings {
-		got := WRAPAny(goToString(val, false))
+		obj := WRAPAny(GoToString(val))
+		if _, ok := obj.(String); !ok {
+			t.Errorf("Not a String, but a %T", obj)
+		}
+		if ToGo(unsafe.Pointer(obj.TOPTR())).(string) != val {
+			t.Error("Round trip failed")
+		}
+		got = WRAPAny(GoToClownfish(obj, false))
+		if got.TOPTR() != obj.TOPTR() {
+			t.Error("Wrap Obj failed")
+		}
+
+		got = WRAPAny(GoToClownfish(val, false))
+		if _, ok := got.(String); !ok {
+			t.Errorf("Not a String, but a %T", got)
+		}
+		if ToGo(unsafe.Pointer(got.TOPTR())).(string) != val {
+			t.Error("Round trip failed")
+		}
+
+		got = WRAPAny(GoToClownfish(&val, false))
 		if _, ok := got.(String); !ok {
 			t.Errorf("Not a String, but a %T", got)
 		}
@@ -147,10 +169,25 @@ func TestGoToString(t *testing.T) {
 }
 
 func TestGoToBlob(t *testing.T) {
+	var got Obj
+
 	strings := []string{"foo", "", "z\u0000z"}
 	for _, str := range strings {
 		val := []byte(str)
-		got := WRAPAny(goToBlob(val, false))
+
+		obj := WRAPAny(GoToBlob(val))
+		if _, ok := obj.(Blob); !ok {
+			t.Errorf("Not a Blob, but a %T", obj)
+		}
+		if !reflect.DeepEqual(ToGo(unsafe.Pointer(obj.TOPTR())), val) {
+			t.Error("Round trip failed")
+		}
+		got = WRAPAny(GoToClownfish(obj, false))
+		if got.TOPTR() != obj.TOPTR() {
+			t.Error("Wrap Obj failed")
+		}
+
+		got = WRAPAny(GoToClownfish(val, false))
 		if _, ok := got.(Blob); !ok {
 			t.Errorf("Not a Blob, but a %T", got)
 		}
@@ -167,23 +204,46 @@ func checkIntConv(t *testing.T, got Obj) {
 }
 
 func TestGoToInteger(t *testing.T) {
-	checkIntConv(t, WRAPAny(GoToClownfish(int(42), nil, true)))
-	checkIntConv(t, WRAPAny(GoToClownfish(uint(42), nil, true)))
-	checkIntConv(t, WRAPAny(GoToClownfish(int64(42), nil, true)))
-	checkIntConv(t, WRAPAny(GoToClownfish(int32(42), nil, true)))
-	checkIntConv(t, WRAPAny(GoToClownfish(int16(42), nil, true)))
-	checkIntConv(t, WRAPAny(GoToClownfish(int8(42), nil, true)))
-	checkIntConv(t, WRAPAny(GoToClownfish(uint64(42), nil, true)))
-	checkIntConv(t, WRAPAny(GoToClownfish(uint32(42), nil, true)))
-	checkIntConv(t, WRAPAny(GoToClownfish(uint16(42), nil, true)))
-	checkIntConv(t, WRAPAny(GoToClownfish(uint8(42), nil, true)))
-	checkIntConv(t, WRAPAny(GoToClownfish(byte(42), nil, true)))
-	checkIntConv(t, WRAPAny(GoToClownfish(rune(42), nil, true)))
+	var got Obj
+
+	values := []int64{math.MinInt64, -1, 0, 1, math.MaxInt64}
+	for _, val := range values {
+		got = WRAPAny(GoToInteger(val))
+		if _, ok := got.(Integer); !ok {
+			t.Errorf("Not an Integer, but a %T", got)
+		}
+		if !reflect.DeepEqual(ToGo(unsafe.Pointer(got.TOPTR())), val) {
+			t.Error("Round trip failed")
+		}
+
+		got = WRAPAny(GoToClownfish(val, false))
+		if _, ok := got.(Integer); !ok {
+			t.Errorf("Not an Integer, but a %T", got)
+		}
+		if !reflect.DeepEqual(ToGo(unsafe.Pointer(got.TOPTR())), val) {
+			t.Error("Round trip failed")
+		}
+	}
+
+	checkIntConv(t, WRAPAny(GoToClownfish(int(42), true)))
+	checkIntConv(t, WRAPAny(GoToClownfish(uint(42), true)))
+	checkIntConv(t, WRAPAny(GoToClownfish(int64(42), true)))
+	checkIntConv(t, WRAPAny(GoToClownfish(int32(42), true)))
+	checkIntConv(t, WRAPAny(GoToClownfish(int16(42), true)))
+	checkIntConv(t, WRAPAny(GoToClownfish(int8(42), true)))
+	checkIntConv(t, WRAPAny(GoToClownfish(uint64(42), true)))
+	checkIntConv(t, WRAPAny(GoToClownfish(uint32(42), true)))
+	checkIntConv(t, WRAPAny(GoToClownfish(uint16(42), true)))
+	checkIntConv(t, WRAPAny(GoToClownfish(uint8(42), true)))
+	checkIntConv(t, WRAPAny(GoToClownfish(byte(42), true)))
+	checkIntConv(t, WRAPAny(GoToClownfish(rune(42), true)))
+	i := int(42)
+	checkIntConv(t, WRAPAny(GoToClownfish(&i, true)))
 }
 
 func TestGoToIntegerRangeError(t *testing.T) {
 	defer func() { recover() }()
-	GoToClownfish(uint64(math.MaxUint64), nil, true)
+	GoToClownfish(uint64(math.MaxUint64), true)
 	t.Error("Truncation didn't cause error")
 }
 
@@ -193,7 +253,15 @@ func TestGoToFloat(t *testing.T) {
 	values := []float64{math.MaxFloat64, math.SmallestNonzeroFloat64,
 		0.0, -0.0, 0.5, -0.5, math.Inf(1), math.Inf(-1)}
 	for _, val := range values {
-		got := WRAPAny(goToFloat(val, false))
+		got = WRAPAny(GoToFloat(val))
+		if _, ok := got.(Float); !ok {
+			t.Errorf("Not a Float, but a %T", got)
+		}
+		if !reflect.DeepEqual(ToGo(unsafe.Pointer(got.TOPTR())), val) {
+			t.Error("Round trip failed")
+		}
+
+		got = WRAPAny(GoToClownfish(val, false))
 		if _, ok := got.(Float); !ok {
 			t.Errorf("Not a Float, but a %T", got)
 		}
@@ -203,21 +271,33 @@ func TestGoToFloat(t *testing.T) {
 	}
 
 	// NaN
-	got = WRAPAny(goToFloat(math.NaN(), false))
+	got = WRAPAny(GoToFloat(math.NaN()))
 	if !math.IsNaN(ToGo(unsafe.Pointer(got.TOPTR())).(float64)) {
 		t.Error("Didn't convert NaN cleanly")
 	}
 
 	// float32
 	expected := float32(0.5)
-	got = WRAPAny(GoToClownfish(expected, nil, false))
+	got = WRAPAny(GoToClownfish(expected, false))
+	deepCheck(t, got.(Float).GetValue(), float64(expected))
+	got = WRAPAny(GoToClownfish(&expected, false))
 	deepCheck(t, got.(Float).GetValue(), float64(expected))
 }
 
 func TestGoToBoolean(t *testing.T) {
+	var got Obj
+
 	values := []bool{true, false}
 	for _, val := range values {
-		got := WRAPAny(goToBoolean(val, false))
+		got = WRAPAny(GoToBoolean(val))
+		if _, ok := got.(Boolean); !ok {
+			t.Errorf("Not a Boolean, but a %T", got)
+		}
+		if !reflect.DeepEqual(ToGo(unsafe.Pointer(got.TOPTR())), val) {
+			t.Error("Round trip failed")
+		}
+
+		got = WRAPAny(GoToClownfish(val, false))
 		if _, ok := got.(Boolean); !ok {
 			t.Errorf("Not a Boolean, but a %T", got)
 		}
@@ -228,11 +308,20 @@ func TestGoToBoolean(t *testing.T) {
 }
 
 func TestGoToHash(t *testing.T) {
+	var got Obj
+
 	expected := map[string]interface{}{
 		"foo": int64(1),
 		"bar": []interface{}{},
 	}
-	got := WRAPAny(goToHash(expected, false))
+
+	got = WRAPAny(GoToHash(expected))
+	if _, ok := got.(Hash); !ok {
+		t.Errorf("Not a Hash, but a %T", got)
+	}
+	deepCheck(t, ToGo(unsafe.Pointer(got.TOPTR())), expected)
+
+	got = WRAPAny(GoToClownfish(expected, false))
 	if _, ok := got.(Hash); !ok {
 		t.Errorf("Not a Hash, but a %T", got)
 	}
@@ -240,13 +329,22 @@ func TestGoToHash(t *testing.T) {
 }
 
 func TestGoToVector(t *testing.T) {
+	var got Obj
+
 	expected := []interface{}{
 		"foo",
 		"bar",
 		[]interface{}{},
 		int64(-1),
 	}
-	got := WRAPAny(goToVector(expected, false))
+
+	got = WRAPAny(GoToVector(expected))
+	if _, ok := got.(Vector); !ok {
+		t.Errorf("Not a Vector, but a %T", got)
+	}
+	deepCheck(t, ToGo(unsafe.Pointer(got.TOPTR())), expected)
+
+	got = WRAPAny(GoToClownfish(expected, true))
 	if _, ok := got.(Vector); !ok {
 		t.Errorf("Not a Vector, but a %T", got)
 	}
