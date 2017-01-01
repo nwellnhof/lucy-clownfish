@@ -77,7 +77,13 @@ char*
 CFCGoClass_gen_meth_glue(CFCGoClass *self);
 
 char*
-CFCGoClass_gen_wrap_func_reg(CFCGoClass *self);
+CFCGoClass_gen_class_var(CFCGoClass *self);
+
+char*
+CFCGoClass_gen_class_init(CFCGoClass *self);
+
+char*
+CFCGoClass_gen_class_reg(CFCGoClass *self);
 
 void
 CFCGoClass_spec_method(CFCGoClass *self, const char *name, const char *sig);

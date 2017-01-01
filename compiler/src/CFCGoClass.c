@@ -188,12 +188,33 @@ CFCGoClass_go_typing(CFCGoClass *self) {
 
         char *go_struct_def;
         if (parent && !self->suppress_struct) {
+            char pattern[] =
+                "type %sCLASSIMP struct {\n"
+                "\t%sCLASSIMP\n"
+                "}\n"
+                "\n"
+                "type %sIMP struct {\n"
+                "\t%sIMP\n"
+                "}\n"
+                "\n"
+                ;
             go_struct_def
-                = CFCUtil_sprintf("type %sIMP struct {\n\t%sIMP\n}\n",
+                = CFCUtil_sprintf(pattern, short_struct, parent_type_str,
                                   short_struct, parent_type_str);
         }
         else {
             go_struct_def = CFCUtil_strdup("");
+        }
+
+        char *class_iface;
+        if (parent) {
+            class_iface = CFCUtil_sprintf("\t%sCLASS\n", parent_type_str);
+        }
+        else {
+            class_iface = CFCUtil_strdup(
+                "\tClass\n"
+                "\tCF_WRAP_PTR(ptr unsafe.Pointer) Obj\n"
+            );
         }
 
         char *parent_iface;
@@ -224,6 +245,10 @@ CFCGoClass_go_typing(CFCGoClass *self) {
         }
 
         char pattern[] =
+            "type %sCLASS interface {\n"
+            "%s"
+            "}\n"
+            "\n"
             "type %s interface {\n"
             "%s"
             "%s"
@@ -231,8 +256,9 @@ CFCGoClass_go_typing(CFCGoClass *self) {
             "\n"
             "%s"
             ;
-        content = CFCUtil_sprintf(pattern, short_struct, parent_iface,
-                                  novel_iface, go_struct_def);
+        content = CFCUtil_sprintf(pattern, short_struct, class_iface,
+                                  short_struct, parent_iface, novel_iface,
+                                  go_struct_def);
         FREEMEM(parent_type_str);
         FREEMEM(go_struct_def);
         FREEMEM(parent_iface);
@@ -259,7 +285,7 @@ CFCGoClass_boilerplate_funcs(CFCGoClass *self) {
             "\treturn obj\n"
             "}\n"
             "\n"
-            "func WRAP%sASOBJ(ptr unsafe.Pointer) %sObj {\n"
+            "func (%sCLASSIMP) CF_WRAP_PTR(ptr unsafe.Pointer) %sObj {\n"
             "\treturn WRAP%s(ptr)\n"
             "}\n"
             ;
@@ -373,16 +399,37 @@ CFCGoClass_gen_meth_glue(CFCGoClass *self) {
 }
 
 char*
-CFCGoClass_gen_wrap_func_reg(CFCGoClass *self) {
+CFCGoClass_gen_class_var(CFCGoClass *self) {
     if (CFCClass_inert(self->client)) {
         return CFCUtil_strdup("");
     }
-    char pattern[] =
-        "\t\tunsafe.Pointer(C.%s): WRAP%sASOBJ,\n";
+    char pattern[] = "var %sMETA = %sCLASSIMP{}\n";
+
+    const char *short_struct = CFCClass_get_struct_sym(self->client);
+    return CFCUtil_sprintf(pattern, short_struct, short_struct);
+}
+
+char*
+CFCGoClass_gen_class_init(CFCGoClass *self) {
+    if (CFCClass_inert(self->client)) {
+        return CFCUtil_strdup("");
+    }
+    char pattern[] = "\t%sMETA.INITOBJ(unsafe.Pointer(C.%s))\n";
 
     const char *short_struct = CFCClass_get_struct_sym(self->client);
     const char *class_var = CFCClass_full_class_var(self->client);
-    return CFCUtil_sprintf(pattern, class_var, short_struct);
+    return CFCUtil_sprintf(pattern, short_struct, class_var);
+}
+
+char*
+CFCGoClass_gen_class_reg(CFCGoClass *self) {
+    if (CFCClass_inert(self->client)) {
+        return CFCUtil_strdup("");
+    }
+    char pattern[] = "\t\t&%sMETA,\n";
+
+    const char *short_struct = CFCClass_get_struct_sym(self->client);
+    return CFCUtil_sprintf(pattern, short_struct);
 }
 
 void

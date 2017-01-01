@@ -81,47 +81,54 @@ const (
 	minInt  = -(maxInt - 1)
 )
 
-type WrapFunc func(unsafe.Pointer)Obj
-var wrapRegMutex sync.Mutex
-var wrapReg *map[unsafe.Pointer]WrapFunc
+var classRegMutex sync.Mutex
+var classReg *map[unsafe.Pointer]ObjCLASS
 
 func init() {
 	C.GoCfish_glue_exported_symbols()
 	C.cfish_bootstrap_parcel()
 	C.testcfish_bootstrap_parcel()
-	initWRAP()
+	registerClasses()
 }
 
-func RegisterWrapFuncs(newEntries map[unsafe.Pointer]WrapFunc) {
-	wrapRegMutex.Lock()
-	newSize := len(newEntries)
-	if wrapReg != nil {
-		newSize += len(*wrapReg)
+func RegisterClasses(classes []ObjCLASS) {
+	classRegMutex.Lock()
+	newSize := len(classes)
+	if classReg != nil {
+		newSize += len(*classReg)
 	}
-	newReg := make(map[unsafe.Pointer]WrapFunc, newSize)
-	if wrapReg != nil {
-		for k, v := range *wrapReg {
+	newReg := make(map[unsafe.Pointer]ObjCLASS, newSize)
+	if classReg != nil {
+		for k, v := range *classReg {
 			newReg[k] = v
 		}
 	}
-	for k, v := range newEntries {
-		newReg[k] = v
+	for _, v := range classes {
+		newReg[unsafe.Pointer(v.TOPTR())] = v
 	}
-	wrapReg = &newReg
-	wrapRegMutex.Unlock()
+	classReg = &newReg
+	classRegMutex.Unlock()
+}
+
+func fetchClass(ptr unsafe.Pointer) ObjCLASS {
+	classPtr := C.cfish_Obj_get_class((*C.cfish_Obj)(ptr))
+	class := (*classReg)[unsafe.Pointer(classPtr)]
+	if class == nil {
+		className := CFStringToGo(unsafe.Pointer(C.CFISH_Class_Get_Name(classPtr)))
+		panic(fmt.Sprintf("Failed to find implementation for %s", className))
+	}
+	return class
 }
 
 func WRAPAny(ptr unsafe.Pointer) Obj {
 	if ptr == nil {
 		return nil
 	}
-	class := C.cfish_Obj_get_class((*C.cfish_Obj)(ptr))
-	wrapFunc := (*wrapReg)[unsafe.Pointer(class)]
-	if wrapFunc == nil {
-		className := CFStringToGo(unsafe.Pointer(C.CFISH_Class_Get_Name((*C.cfish_Class)(class))))
-		panic(fmt.Sprintf("Failed to find WRAP function for %s", className))
-	}
-	return wrapFunc(ptr)
+	return fetchClass(ptr).CF_WRAP_PTR(ptr)
+}
+
+type ObjCLASSIMP struct {
+	ClassIMP
 }
 
 type ObjIMP struct {

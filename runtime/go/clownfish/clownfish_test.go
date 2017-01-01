@@ -27,6 +27,12 @@ func deepCheck(t *testing.T, got, expected interface{}) {
 	}
 }
 
+func TestMeta(t *testing.T) {
+	if StringMETA.TOPTR() != GetClass(NewString("")).TOPTR() {
+		t.Error("StringMETA contains wrong pointer")
+	}
+}
+
 func TestStringToGo(t *testing.T) {
 	strings := []string{"foo", "", "z\u0000z"}
 	for _, val := range strings {
