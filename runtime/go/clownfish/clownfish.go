@@ -371,31 +371,16 @@ func ToGo(ptr unsafe.Pointer) interface{} {
 	if ptr == nil {
 		return nil
 	}
-	class := C.cfish_Obj_get_class((*C.cfish_Obj)(ptr))
-	if class == C.CFISH_STRING {
-		return CFStringToGo(ptr)
-	} else if class == C.CFISH_BLOB {
-		return BlobToGo(ptr)
-	} else if class == C.CFISH_VECTOR {
-		return VectorToGo(ptr)
-	} else if class == C.CFISH_HASH {
-		return HashToGo(ptr)
-	} else if class == C.CFISH_BOOLEAN {
-		if ptr == unsafe.Pointer(C.CFISH_TRUE) {
-			return true
-		} else {
-			return false
-		}
-	} else if class == C.CFISH_INTEGER {
-		val := C.CFISH_Int_Get_Value((*C.cfish_Integer)(ptr))
-		return int64(val)
-	} else if class == C.CFISH_FLOAT {
-		val := C.CFISH_Float_Get_Value((*C.cfish_Float)(ptr))
-		return float64(val)
-	} else {
-		// Don't convert to a native Go type, but wrap in a Go struct.
-		return WRAPAny(unsafe.Pointer(C.cfish_incref(ptr)))
-	}
+	class := fetchClass(ptr)
+	return class.CF_NEW_FROM_PTR(class, ptr)
+}
+
+func (*ObjCLASSIMP) CF_NEW_FROM_PTR(c ObjCLASS, ptr unsafe.Pointer) interface{} {
+	return c.CF_WRAP_PTR(ptr)
+}
+
+func (*StringCLASSIMP) CF_NEW_FROM_PTR(c ObjCLASS, ptr unsafe.Pointer) interface{} {
+	return CFStringToGo(ptr)
 }
 
 func CFStringToGo(ptr unsafe.Pointer) string {
@@ -419,6 +404,10 @@ func StringToGo(ptr unsafe.Pointer) string {
 	return C.GoStringN(data, C.int(size))
 }
 
+func (*BlobCLASSIMP) CF_NEW_FROM_PTR(c ObjCLASS, ptr unsafe.Pointer) interface{} {
+	return BlobToGo(ptr)
+}
+
 func BlobToGo(ptr unsafe.Pointer) []byte {
 	blob := (*C.cfish_Blob)(ptr)
 	if blob == nil {
@@ -435,6 +424,10 @@ func BlobToGo(ptr unsafe.Pointer) []byte {
 		panic(fmt.Sprintf("Overflow: %d > %d", size, C.INT_MAX))
 	}
 	return C.GoBytes(unsafe.Pointer(data), C.int(size))
+}
+
+func (*VectorCLASSIMP) CF_NEW_FROM_PTR(c ObjCLASS, ptr unsafe.Pointer) interface{} {
+	return VectorToGo(ptr)
 }
 
 func VectorToGo(ptr unsafe.Pointer) []interface{} {
@@ -458,6 +451,10 @@ func VectorToGo(ptr unsafe.Pointer) []interface{} {
 	return slice
 }
 
+func (*HashCLASSIMP) CF_NEW_FROM_PTR(c ObjCLASS, ptr unsafe.Pointer) interface{} {
+	return HashToGo(ptr)
+}
+
 func HashToGo(ptr unsafe.Pointer) map[string]interface{} {
 	hash := (*C.cfish_Hash)(ptr)
 	if hash == nil {
@@ -478,6 +475,32 @@ func HashToGo(ptr unsafe.Pointer) map[string]interface{} {
 		m[StringToGo(unsafe.Pointer(key))] = ToGo(unsafe.Pointer(val))
 	}
 	return m
+}
+
+func (*BooleanCLASSIMP) CF_NEW_FROM_PTR(c ObjCLASS, ptr unsafe.Pointer) interface{} {
+	return BooleanToGo(ptr)
+}
+
+func BooleanToGo(ptr unsafe.Pointer) bool {
+	return bool(C.CFISH_Bool_Get_Value((*C.cfish_Boolean)(ptr)))
+}
+
+func (*IntegerCLASSIMP) CF_NEW_FROM_PTR(c ObjCLASS, ptr unsafe.Pointer) interface{} {
+	return IntegerToGo(ptr)
+}
+
+func IntegerToGo(ptr unsafe.Pointer) int64 {
+	val := C.CFISH_Int_Get_Value((*C.cfish_Integer)(ptr))
+	return int64(val)
+}
+
+func (*FloatCLASSIMP) CF_NEW_FROM_PTR(c ObjCLASS, ptr unsafe.Pointer) interface{} {
+	return FloatToGo(ptr)
+}
+
+func FloatToGo(ptr unsafe.Pointer) float64 {
+	val := C.CFISH_Float_Get_Value((*C.cfish_Float)(ptr))
+	return float64(val)
 }
 
 func (e *ErrIMP) Error() string {

@@ -214,6 +214,7 @@ CFCGoClass_go_typing(CFCGoClass *self) {
             class_iface = CFCUtil_strdup(
                 "\tClass\n"
                 "\tCF_WRAP_PTR(ptr unsafe.Pointer) Obj\n"
+                "\tCF_NEW_FROM_PTR(c ObjCLASS, ptr unsafe.Pointer) interface{}\n"
             );
         }
 
