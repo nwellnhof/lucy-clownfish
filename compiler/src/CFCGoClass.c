@@ -230,16 +230,6 @@ CFCGoClass_go_typing(CFCGoClass *self) {
         S_lazy_init_method_bindings(self);
         for (int i = 0; self->method_bindings[i] != NULL; i++) {
             CFCGoMethod *meth_binding = self->method_bindings[i];
-            CFCMethod *method = CFCGoMethod_get_client(meth_binding);
-            if (method) {
-                if (!CFCMethod_novel(method)) {
-                    continue;
-                }
-                const char *sym = CFCMethod_get_name(method);
-                if (!CFCClass_fresh_method(self->client, sym)) {
-                    continue;
-                }
-            }
 
             const char *sig = CFCGoMethod_get_sig(meth_binding, self->client);
             novel_iface = CFCUtil_cat(novel_iface, "\t", sig, "\n", NULL);
@@ -364,10 +354,6 @@ S_lazy_init_method_bindings(CFCGoClass *self) {
 
         // Only include novel methods.
         if (!CFCMethod_novel(method)) {
-            continue;
-        }
-        const char *sym = CFCMethod_get_name(method);
-        if (!CFCClass_fresh_method(self->client, sym)) {
             continue;
         }
 
