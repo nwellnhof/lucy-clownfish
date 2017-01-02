@@ -350,19 +350,14 @@ func UnwrapNullable(value Obj) unsafe.Pointer {
 	if value == nil {
 		return nil
 	}
-	val := reflect.ValueOf(value)
-	if val.IsNil() {
-		return nil
-	}
 	return unsafe.Pointer(value.TOPTR())
 }
 
 func Unwrap(value Obj, name string) unsafe.Pointer {
-	ptr := UnwrapNullable(value)
-	if ptr == nil {
+	if value == nil {
 		panic(NewErr(fmt.Sprintf("%s cannot be nil", name)))
 	}
-	return ptr
+	return unsafe.Pointer(value.TOPTR())
 }
 
 func ToGo(ptr unsafe.Pointer) interface{} {
