@@ -175,7 +175,9 @@ CFCPerlMethod_xsub_spec(CFCPerlMethod *self) {
 
 char*
 CFCPerlMethod_xsub_def(CFCPerlMethod *self, CFCClass *klass) {
-    if (!CFCMethod_novel(self->method)) { return NULL; }
+    if (!CFCMethod_novel(self->method) || CFCMethod_suppressed(self->method)) {
+        return NULL;
+    }
 
     if (self->sub.use_labeled_params) {
         return S_xsub_def_labeled_params(self, klass);

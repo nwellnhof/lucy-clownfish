@@ -188,20 +188,22 @@ CFCPerlClass_clear_registry(void) {
     registry      = NULL;
 }
 
+CFCMethod*
+S_find_fresh_method(CFCPerlClass *self, const char *meth_name) {
+    if (!self->client) { return NULL; }
+    CFCMethod *method = CFCClass_method(self->client, meth_name);
+    if (!method || !CFCMethod_is_fresh(method, self->client)) {
+        return NULL;
+    }
+    return method;
+}
+
 void
 CFCPerlClass_bind_method(CFCPerlClass *self, const char *alias,
                          const char *meth_name) {
-    if (!self->client) {
-        CFCUtil_die("Can't bind_method %s -- can't find client for %s",
-                    alias, self->class_name);
-    }
-    CFCMethod *method = CFCClass_method(self->client, meth_name);
+    CFCMethod *method = S_find_fresh_method(self, meth_name);
     if (!method) {
-        CFCUtil_die("Can't bind_method %s -- can't find method %s in %s",
-                    alias, meth_name, self->class_name);
-    }
-    if (!CFCMethod_is_fresh(method, self->client)) {
-        CFCUtil_die("Can't bind_method %s -- method %s not fresh in %s",
+        CFCUtil_die("Can't bind_method %s -- no novel method %s found in %s",
                     alias, meth_name, self->class_name);
     }
     CFCMethod_set_host_alias(method, alias);
@@ -209,20 +211,22 @@ CFCPerlClass_bind_method(CFCPerlClass *self, const char *alias,
 
 void
 CFCPerlClass_exclude_method(CFCPerlClass *self, const char *meth_name) {
-    if (!self->client) {
-        CFCUtil_die("Can't exclude_method %s -- can't find client for %s",
-                    meth_name, self->class_name);
-    }
-    CFCMethod *method = CFCClass_method(self->client, meth_name);
+    CFCMethod *method = S_find_fresh_method(self, meth_name);
     if (!method) {
-        CFCUtil_die("Can't exclude_method %s -- method not found in %s",
-                    meth_name, self->class_name);
-    }
-    if (!CFCMethod_is_fresh(method, self->client)) {
-        CFCUtil_die("Can't exclude_method %s -- method not fresh in %s",
+        CFCUtil_die("Can't exclude_method %s -- no novel method found in %s",
                     meth_name, self->class_name);
     }
     CFCMethod_exclude_from_host(method);
+}
+
+void
+CFCPerlClass_suppress_method(CFCPerlClass *self, const char *meth_name) {
+    CFCMethod *method = S_find_fresh_method(self, meth_name);
+    if (!method) {
+        CFCUtil_die("Can't suppress_method %s -- no novel method found in %s",
+                    meth_name, self->class_name);
+    }
+    CFCMethod_suppress_host_bindings(method);
 }
 
 void

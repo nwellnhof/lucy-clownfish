@@ -208,6 +208,12 @@ CFCMethod_exclude_from_host(CFCMethod *self);
 int
 CFCMethod_excluded_from_host(CFCMethod *self);
 
+void
+CFCMethod_suppress_host_bindings(CFCMethod *self);
+
+int
+CFCMethod_suppressed(CFCMethod *self);
+
 const char*
 CFCMethod_get_exposure(CFCMethod *self);
 

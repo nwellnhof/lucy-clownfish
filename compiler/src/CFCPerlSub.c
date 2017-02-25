@@ -223,7 +223,6 @@ CFCPerlSub_build_c_name(const char *class_name, const char *alias) {
     for (size_t i = 0; i < class_name_len; i++) {
         char c = class_name[i];
         if (c == ':') {
-            while (class_name[i + 1] == ':') { i++; }
             c_name[j++] = '_';
         }
         else {

@@ -89,10 +89,15 @@ void
 CFCPerlClass_bind_constructor(CFCPerlClass *self, const char *alias,
                               const char *initializer);
 
-/** Block the automatic generation of a method binding.
+/** Block the generation of a method binding.
  */
 void
 CFCPerlClass_exclude_method(CFCPerlClass *self, const char *method);
+
+/** Block the automatic generation of a method's XSUB.
+ */
+void
+CFCPerlClass_suppress_method(CFCPerlClass *self, const char *method);
 
 /** Block the automatic generation of a constructor binding.
  */

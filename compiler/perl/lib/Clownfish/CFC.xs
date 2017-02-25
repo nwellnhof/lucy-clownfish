@@ -2172,6 +2172,13 @@ PPCODE:
     CFCPerlClass_exclude_method(self, method);
 
 void
+suppress_method(self, method)
+    CFCPerlClass *self;
+    const char *method;
+PPCODE:
+    CFCPerlClass_suppress_method(self, method);
+
+void
 exclude_constructor(self)
     CFCPerlClass *self;
 PPCODE:

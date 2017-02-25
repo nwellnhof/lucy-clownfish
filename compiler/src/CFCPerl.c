@@ -668,6 +668,8 @@ CFCPerl_write_bindings(CFCPerl *self, const char *boot_class,
         "\n"
         "%s" // Generated XS.
         "\n"
+        "%s" // Hand-rolled XS.
+        "\n"
         "MODULE = %s   PACKAGE = %s\n" // Boot class.
         "\n"
         "BOOT:\n"
@@ -688,13 +690,11 @@ CFCPerl_write_bindings(CFCPerl *self, const char *boot_class,
         "                           xsub_specs, file);\n"
         "}\n"
         "\n"
-        "%s" // Hand-rolled XS.
-        "\n"
         "%s"; // Footer
     char *contents
         = CFCUtil_sprintf(pattern, self->c_header, privacy_syms, includes,
-                          generated_xs, boot_class, boot_class, class_specs,
-                          xsub_specs, bootstrap_calls, hand_rolled_xs,
+                          generated_xs, hand_rolled_xs, boot_class, boot_class,
+                          class_specs, xsub_specs, bootstrap_calls,
                           self->c_footer);
 
     // Derive path to generated .xs file.

@@ -42,6 +42,7 @@ struct CFCMethod {
     int is_abstract;
     int is_novel;
     int is_excluded;
+    int is_suppressed;
 };
 
 static CFCClass*
@@ -118,12 +119,13 @@ CFCMethod_init(CFCMethod *self, const char *exposure, const char *name,
         }
     }
 
-    self->novel_method = NULL;
-    self->fresh_class  = CFCWeakPtr_new((CFCBase*)klass);
-    self->host_alias   = NULL;
-    self->is_final     = is_final;
-    self->is_abstract  = is_abstract;
-    self->is_excluded  = false;
+    self->novel_method  = NULL;
+    self->fresh_class   = CFCWeakPtr_new((CFCBase*)klass);
+    self->host_alias    = NULL;
+    self->is_final      = is_final;
+    self->is_abstract   = is_abstract;
+    self->is_excluded   = false;
+    self->is_suppressed = false;
 
     // Assume that this method is novel until we discover when applying
     // inheritance that it overrides another.
@@ -321,6 +323,22 @@ int
 CFCMethod_excluded_from_host(CFCMethod *self) {
     CFCMethod *novel_method = CFCMethod_find_novel_method(self);
     return novel_method->is_excluded;
+}
+
+void
+CFCMethod_suppress_host_bindings(CFCMethod *self) {
+    if (!self->is_novel) {
+        const char *name = CFCMethod_get_name(self);
+        CFCUtil_die("Can't suppress_host_bindings -- method %s not novel"
+                    " in %s", name, S_fresh_class_name(self));
+    }
+    self->is_suppressed = true;
+}
+
+int
+CFCMethod_suppressed(CFCMethod *self) {
+    CFCMethod *novel_method = CFCMethod_find_novel_method(self);
+    return novel_method->is_suppressed;
 }
 
 CFCMethod*
