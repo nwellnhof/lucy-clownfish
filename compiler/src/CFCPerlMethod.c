@@ -159,7 +159,7 @@ S_xsub_body(CFCPerlMethod *self, CFCClass *klass) {
     // Extract the method function pointer.
     char *full_meth = CFCMethod_full_method_sym(method, klass);
     char *method_ptr
-        = CFCUtil_sprintf("method = CFISH_METHOD_PTR(%s, %s);\n    ",
+        = CFCUtil_sprintf("    method = CFISH_METHOD_PTR(%s, %s);\n",
                           CFCClass_full_class_var(klass), full_meth);
     body = CFCUtil_cat(body, method_ptr, NULL);
     FREEMEM(full_meth);
@@ -175,7 +175,7 @@ S_xsub_body(CFCPerlMethod *self, CFCClass *klass) {
             const char *name   = CFCVariable_get_name(var);
             const char *type_c = CFCType_to_c(type);
             const char *pattern =
-                "arg_%s = (%s)CFISH_INCREF(arg_%s);\n    ";
+                "    arg_%s = (%s)CFISH_INCREF(arg_%s);\n";
             char *statement = CFCUtil_sprintf(pattern, name, type_c, name);
             body = CFCUtil_cat(body, statement, NULL);
             FREEMEM(statement);
@@ -184,8 +184,8 @@ S_xsub_body(CFCPerlMethod *self, CFCClass *klass) {
 
     if (CFCType_is_void(CFCMethod_get_return_type(method))) {
         // Invoke method in void context.
-        body = CFCUtil_cat(body, "method(", name_list,
-                           ");\n    XSRETURN(0);", NULL);
+        body = CFCUtil_cat(body, "    method(", name_list,
+                           ");\n    XSRETURN(0);\n", NULL);
     }
     else {
         // Return a value for method invoked in a scalar context.
@@ -195,14 +195,14 @@ S_xsub_body(CFCPerlMethod *self, CFCClass *klass) {
             const char *type_str = CFCType_to_c(return_type);
             CFCUtil_die("Can't find typemap for '%s'", type_str);
         }
-        body = CFCUtil_cat(body, "retval = method(", name_list,
-                           ");\n    ST(0) = ", assignment, ";", NULL);
+        body = CFCUtil_cat(body, "    retval = method(", name_list,
+                           ");\n    ST(0) = ", assignment, ";\n", NULL);
         if (CFCType_is_object(return_type)
             && CFCType_incremented(return_type)
            ) {
-            body = CFCUtil_cat(body, "\n    CFISH_DECREF(retval);", NULL);
+            body = CFCUtil_cat(body, "    CFISH_DECREF(retval);\n", NULL);
         }
-        body = CFCUtil_cat(body, "\n    sv_2mortal( ST(0) );\n    XSRETURN(1);",
+        body = CFCUtil_cat(body, "    sv_2mortal( ST(0) );\n    XSRETURN(1);\n",
                            NULL);
         FREEMEM(assignment);
     }
@@ -283,7 +283,7 @@ S_xsub_def_labeled_params(CFCPerlMethod *self, CFCClass *klass) {
         "%s"        // arg_assigns
         "\n"
         "    /* Execute */\n"
-        "    %s\n"  // body
+        "%s"  // body
         "}\n";
     char *xsub_def
         = CFCUtil_sprintf(pattern, c_name, c_name, param_specs, num_vars - 1,
@@ -377,7 +377,7 @@ S_xsub_def_positional_args(CFCPerlMethod *self, CFCClass *klass) {
         "%s" // arg_assigns
         "\n"
         "    /* Execute */\n"
-        "    %s\n"
+        "%s" // body
         "}\n";
     char *xsub
         = CFCUtil_sprintf(pattern, self->sub.c_name, self->sub.c_name,
