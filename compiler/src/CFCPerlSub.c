@@ -48,23 +48,6 @@ CFCPerlSub_init(CFCPerlSub *self, CFCParamList *param_list,
     self->alias       = CFCUtil_strdup(alias);
     self->use_labeled_params = use_labeled_params;
     self->perl_name = CFCUtil_sprintf("%s::%s", class_name, alias);
-
-    size_t c_name_len = strlen(self->perl_name) + sizeof("XS_") + 1;
-    self->c_name = (char*)MALLOCATE(c_name_len);
-    size_t j = 3;
-    memcpy(self->c_name, "XS_", j);
-    for (size_t i = 0, max = strlen(self->perl_name); i < max; i++) {
-        char c = self->perl_name[i];
-        if (c == ':') {
-            while (self->perl_name[i + 1] == ':') { i++; }
-            self->c_name[j++] = '_';
-        }
-        else {
-            self->c_name[j++] = c;
-        }
-    }
-    self->c_name[j] = 0; // NULL-terminate.
-
     return self;
 }
 
@@ -226,6 +209,31 @@ S_arg_assignment(CFCVariable *var, const char *val,
     FREEMEM(conversion);
     FREEMEM(statement);
     return retval;
+}
+
+char*
+CFCPerlSub_build_c_name(const char *class_name, const char *alias) {
+    size_t class_name_len = strlen(class_name);
+    size_t alias_len      = strlen(alias);
+    size_t c_name_len     = class_name_len + alias_len + 5;
+    char *c_name = (char*)MALLOCATE(c_name_len);
+    size_t j = 3;
+
+    memcpy(c_name, "XS_", j);
+    for (size_t i = 0; i < class_name_len; i++) {
+        char c = class_name[i];
+        if (c == ':') {
+            while (class_name[i + 1] == ':') { i++; }
+            c_name[j++] = '_';
+        }
+        else {
+            c_name[j++] = c;
+        }
+    }
+    c_name[j++] = '_';
+    memcpy(c_name + j, alias, alias_len + 1);
+
+    return c_name;
 }
 
 CFCParamList*

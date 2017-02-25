@@ -110,6 +110,32 @@ CFCPerlMethod_init(CFCPerlMethod *self, CFCClass *klass, CFCMethod *method) {
     CFCPerlSub_init((CFCPerlSub*)self, param_list, class_name, perl_name,
                     use_labeled_params);
     self->method = (CFCMethod*)CFCBase_incref((CFCBase*)method);
+
+    if (CFCMethod_novel(method)) {
+        self->sub.c_name = CFCPerlSub_build_c_name(class_name, perl_name);
+    }
+    else {
+        CFCMethod *novel_meth = CFCMethod_find_novel_method(method);
+        CFCClass  *ancestor   = CFCClass_get_parent(klass);
+        while (ancestor && !CFCMethod_is_fresh(novel_meth, ancestor)) {
+            ancestor = CFCClass_get_parent(ancestor);
+        }
+        if (!ancestor) {
+            CFCUtil_die("Failed to find novel class for method %s#%s",
+                        CFCClass_get_name(klass), CFCMethod_get_name(method));
+        }
+        if (CFCClass_in_same_parcel(ancestor, klass)) {
+            const char *ancestor_class_name = CFCClass_get_name(ancestor);
+            self->sub.c_name = CFCPerlSub_build_c_name(ancestor_class_name,
+                                                       perl_name);
+        }
+        else {
+            // If the novel method is in a different parcel, we have to
+            // find the XSUB at runtime.
+            self->sub.c_name = CFCUtil_strdup("NULL");
+        }
+    }
+
     FREEMEM(perl_name);
     return self;
 }
@@ -139,7 +165,18 @@ CFCPerlMethod_perl_name(CFCMethod *method) {
 }
 
 char*
+CFCPerlMethod_xsub_spec(CFCPerlMethod *self) {
+    char *imp_func = CFCMethod_imp_func(self->method);
+    char *spec = CFCUtil_sprintf("{ \"%s\", %s, (cfish_method_t)%s }",
+                                 self->sub.alias, self->sub.c_name, imp_func);
+    FREEMEM(imp_func);
+    return spec;
+}
+
+char*
 CFCPerlMethod_xsub_def(CFCPerlMethod *self, CFCClass *klass) {
+    if (!CFCMethod_novel(self->method)) { return NULL; }
+
     if (self->sub.use_labeled_params) {
         return S_xsub_def_labeled_params(self, klass);
     }
@@ -156,13 +193,21 @@ S_xsub_body(CFCPerlMethod *self, CFCClass *klass) {
     char         *name_list  = CFCPerlSub_arg_name_list((CFCPerlSub*)self);
     char         *body       = CFCUtil_strdup("");
 
+    // The XSUB directly calls the implementing function, rather than
+    // invokes the method on the object using vtable method dispatch.
+    // Doing things this way allows SUPER:: invocations from Perl-space
+    // to work properly. (The callback to the Perl method is stored in
+    // vtable as well. Using dynamic dispatch for SUPER:: invocations
+    // would result in calling the Perl method over and over.)
+    //
+    // The actual class to be used is stored in CvXSUBANY.
+
     // Extract the method function pointer.
-    char *full_meth = CFCMethod_full_method_sym(method, klass);
-    char *method_ptr
-        = CFCUtil_sprintf("    method = CFISH_METHOD_PTR(%s, %s);\n",
-                          CFCClass_full_class_var(klass), full_meth);
+    char *meth_type_c = CFCMethod_full_typedef(method, klass);
+    const char pattern[] = "    method = (%s)XSANY.any_dptr;\n";
+    char *method_ptr = CFCUtil_sprintf(pattern, meth_type_c);
     body = CFCUtil_cat(body, method_ptr, NULL);
-    FREEMEM(full_meth);
+    FREEMEM(meth_type_c);
     FREEMEM(method_ptr);
 
     // Compensate for functions which eat refcounts.

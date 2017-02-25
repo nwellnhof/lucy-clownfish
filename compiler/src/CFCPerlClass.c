@@ -268,16 +268,7 @@ CFCPerlClass_method_bindings(CFCClass *klass) {
             continue;
         }
 
-        /* Create the binding, add it to the array.
-         *
-         * Also create an XSub binding for each override.  Each of these
-         * directly calls the implementing function, rather than invokes the
-         * method on the object using vtable method dispatch.  Doing things
-         * this way allows SUPER:: invocations from Perl-space to work
-         * properly. (The callback to the Perl method is stored in the
-         * vtable as well. Using dynamic dispatch for SUPER:: invocations
-         * would result in calling the Perl method over and over.)
-         */
+        // Create the binding, add it to the array.
         CFCPerlMethod *meth_binding = CFCPerlMethod_new(klass, method);
         size_t size = (num_bound + 2) * sizeof(CFCPerlMethod*);
         bound = (CFCPerlMethod**)REALLOCATE(bound, size);

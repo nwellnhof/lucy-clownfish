@@ -513,12 +513,9 @@ CFCPerl_write_host_code(CFCPerl *self) {
 }
 
 static char*
-S_add_xsub_spec(char *xsub_specs, CFCPerlSub *xsub) {
-    const char *c_name = CFCPerlSub_c_name(xsub);
-    const char *alias = CFCPerlSub_get_alias(xsub);
+S_add_xsub_spec(char *xsub_specs, const char *spec) {
     const char *sep = xsub_specs[0] == '\0' ? "" : ",\n";
-    xsub_specs = CFCUtil_cat(xsub_specs, sep, "        { \"", alias, "\", ",
-                             c_name, " }", NULL);
+    xsub_specs = CFCUtil_cat(xsub_specs, sep, "        ", spec, NULL);
     return xsub_specs;
 }
 
@@ -574,17 +571,20 @@ CFCPerl_write_bindings(CFCPerl *self, const char *boot_class,
             CFCPerlConstructor **constructors
                 = CFCPerlClass_constructor_bindings(klass);
             for (size_t k = 0; constructors[k] != NULL; k++) {
-                CFCPerlSub *xsub = (CFCPerlSub*)constructors[k];
+                CFCPerlConstructor *ctor = constructors[k];
 
                 // Add the XSUB function definition.
-                char *xsub_def
-                    = CFCPerlConstructor_xsub_def(constructors[k], klass);
-                generated_xs = CFCUtil_cat(generated_xs, xsub_def, "\n",
-                                           NULL);
-                FREEMEM(xsub_def);
+                char *xsub_def = CFCPerlConstructor_xsub_def(ctor, klass);
+                if (xsub_def) {
+                    generated_xs = CFCUtil_cat(generated_xs, xsub_def, "\n",
+                                               NULL);
+                    FREEMEM(xsub_def);
+                }
 
                 // Add XSUB initialization at boot.
-                xsub_specs = S_add_xsub_spec(xsub_specs, xsub);
+                char *xsub_spec = CFCPerlConstructor_xsub_spec(ctor);
+                xsub_specs = S_add_xsub_spec(xsub_specs, xsub_spec);
+                FREEMEM(xsub_spec);
                 num_xsubs += 1;
 
                 CFCBase_decref((CFCBase*)constructors[k]);
@@ -594,10 +594,10 @@ CFCPerl_write_bindings(CFCPerl *self, const char *boot_class,
             // Methods.
             CFCPerlMethod **methods = CFCPerlClass_method_bindings(klass);
             for (size_t k = 0; methods[k] != NULL; k++) {
-                CFCPerlSub *xsub = (CFCPerlSub*)methods[k];
+                CFCPerlMethod *method = methods[k];
 
                 // Add the XSUB function definition.
-                char *xsub_def = CFCPerlMethod_xsub_def(methods[k], klass);
+                char *xsub_def = CFCPerlMethod_xsub_def(method, klass);
                 if (xsub_def) {
                     generated_xs = CFCUtil_cat(generated_xs, xsub_def, "\n",
                                                NULL);
@@ -605,10 +605,12 @@ CFCPerl_write_bindings(CFCPerl *self, const char *boot_class,
                 }
 
                 // Add XSUB initialization at boot.
-                xsub_specs = S_add_xsub_spec(xsub_specs, xsub);
+                char *xsub_spec = CFCPerlMethod_xsub_spec(method);
+                xsub_specs = S_add_xsub_spec(xsub_specs, xsub_spec);
+                FREEMEM(xsub_spec);
                 num_xsubs += 1;
 
-                CFCBase_decref((CFCBase*)methods[k]);
+                CFCBase_decref((CFCBase*)method);
             }
             FREEMEM(methods);
 

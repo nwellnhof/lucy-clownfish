@@ -649,14 +649,50 @@ XSBind_bootstrap(pTHX_ size_t num_classes,
             CFISH_DECREF(isa_name);
         }
 
+        cfish_String *class_name = CFISH_SSTR_WRAP_C(class_spec->name);
+        cfish_Class *klass = cfish_Class_fetch_class(class_name);
+        if (!klass) {
+            THROW(CFISH_ERR, "Class '%o' not found", class_name);
+        }
+        HV *parent_stash = NULL;
+
         // Register XSUBs.
         for (uint32_t j = 0; j < class_spec->num_methods; j++) {
             const XSBind_XSubSpec *xsub_spec = &xsub_specs[xsub_idx++];
 
-            cfish_String *xsub_name
+            XSUBADDR_t xsub = xsub_spec->xsub;
+            if (!xsub) {
+                // Runtime lookup in parent class.
+                if (!parent_stash) {
+                    if (!class_spec->parent_name) {
+                        THROW(CFISH_ERR, "Missing parent_name");
+                    }
+                    parent_stash = gv_stashpv(class_spec->parent_name, 0);
+                    if (!parent_stash) {
+                        THROW(CFISH_ERR, "Stash %s not found",
+                              class_spec->parent_name);
+                    }
+                }
+                GV *gv = gv_fetchmeth(parent_stash, xsub_spec->alias,
+                                      strlen(xsub_spec->alias), -1);
+                if (!gv) {
+                    THROW(CFISH_ERR, "Method %s::%s not found",
+                          class_spec->parent_name, xsub_spec->alias);
+                }
+                xsub = CvXSUB(GvCV(gv));
+                if (!xsub) {
+                    THROW(CFISH_ERR, "Missing XSUB in %s::%s",
+                          class_spec->parent_name, xsub_spec->alias);
+                }
+            }
+
+            cfish_String *sub_name
                 = cfish_Str_newf("%s::%s", class_spec->name, xsub_spec->alias);
-            newXS(CFISH_Str_Get_Ptr8(xsub_name), xsub_spec->xsub, file);
-            CFISH_DECREF(xsub_name);
+            CV *cv = newXS(CFISH_Str_Get_Ptr8(sub_name), xsub, file);
+            if (xsub_spec->method) {
+                CvXSUBANY(cv).any_dptr = (void (*)(void*))xsub_spec->method;
+            }
+            CFISH_DECREF(sub_name);
         }
     }
 }

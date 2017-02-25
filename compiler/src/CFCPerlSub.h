@@ -88,6 +88,11 @@ CFCPerlSub_build_param_specs(CFCPerlSub *self, int first);
 char*
 CFCPerlSub_arg_assignments(CFCPerlSub *self);
 
+/** Build the name for the C function implementing the XSUB.
+ */
+char*
+CFCPerlSub_build_c_name(const char *class_name, const char *alias);
+
 /** Accessor for param list.
  */
 struct CFCParamList*

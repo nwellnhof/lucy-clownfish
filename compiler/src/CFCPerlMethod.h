@@ -54,6 +54,11 @@ CFCPerlMethod_destroy(CFCPerlMethod *self);
 char*
 CFCPerlMethod_perl_name(struct CFCMethod *method);
 
+/** Return the XSubSpec initializer.
+ */
+char*
+CFCPerlMethod_xsub_spec(CFCPerlMethod *self);
+
 /** Generate C code for the XSUB.
  */
 char*

@@ -78,6 +78,9 @@ CFCPerlConstructor_init(CFCPerlConstructor *self, CFCClass *klass,
     CFCParamList *param_list = CFCFunction_get_param_list(self->init_func);
     CFCPerlSub_init((CFCPerlSub*)self, param_list, class_name, alias,
                     true);
+
+    self->sub.c_name = CFCPerlSub_build_c_name(class_name, alias);
+
     return self;
 }
 
@@ -85,6 +88,12 @@ void
 CFCPerlConstructor_destroy(CFCPerlConstructor *self) {
     CFCBase_decref((CFCBase*)self->init_func);
     CFCPerlSub_destroy((CFCPerlSub*)self);
+}
+
+char*
+CFCPerlConstructor_xsub_spec(CFCPerlConstructor *self) {
+    return CFCUtil_sprintf("{ \"%s\", %s, NULL }",
+                           self->sub.alias, self->sub.c_name);
 }
 
 char*

@@ -51,8 +51,9 @@ typedef struct cfish_XSBind_ClassSpec {
 } cfish_XSBind_ClassSpec;
 
 typedef struct cfish_XSBind_XSubSpec {
-    const char *alias;
-    XSUBADDR_t  xsub;
+    const char     *alias;
+    XSUBADDR_t      xsub;
+    cfish_method_t  method;
 } cfish_XSBind_XSubSpec;
 
 typedef struct cfish_XSBind_ParamSpec {

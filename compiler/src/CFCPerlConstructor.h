@@ -50,6 +50,11 @@ CFCPerlConstructor_init(CFCPerlConstructor *self, struct CFCClass *klass,
 void
 CFCPerlConstructor_destroy(CFCPerlConstructor *self);
 
+/** Return the XSubSpec initializer.
+ */
+char*
+CFCPerlConstructor_xsub_spec(CFCPerlConstructor *self);
+
 /** Generate C code for the XSUB.
  */
 char*
