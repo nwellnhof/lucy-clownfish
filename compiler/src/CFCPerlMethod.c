@@ -115,18 +115,11 @@ CFCPerlMethod_init(CFCPerlMethod *self, CFCClass *klass, CFCMethod *method) {
         self->sub.c_name = CFCPerlSub_build_c_name(class_name, perl_name);
     }
     else {
-        CFCMethod *novel_meth = CFCMethod_find_novel_method(method);
-        CFCClass  *ancestor   = CFCClass_get_parent(klass);
-        while (ancestor && !CFCMethod_is_fresh(novel_meth, ancestor)) {
-            ancestor = CFCClass_get_parent(ancestor);
-        }
-        if (!ancestor) {
-            CFCUtil_die("Failed to find novel class for method %s#%s",
-                        CFCClass_get_name(klass), CFCMethod_get_name(method));
-        }
-        if (CFCClass_in_same_parcel(ancestor, klass)) {
-            const char *ancestor_class_name = CFCClass_get_name(ancestor);
-            self->sub.c_name = CFCPerlSub_build_c_name(ancestor_class_name,
+        CFCMethod *novel_meth  = CFCMethod_find_novel_method(method);
+        CFCClass  *novel_class = CFCMethod_get_fresh_class(novel_meth);
+        if (CFCClass_in_same_parcel(novel_class, klass)) {
+            const char *novel_class_name = CFCClass_get_name(novel_class);
+            self->sub.c_name = CFCPerlSub_build_c_name(novel_class_name,
                                                        perl_name);
         }
         else {

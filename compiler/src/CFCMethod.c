@@ -430,9 +430,19 @@ CFCMethod_get_exposure(CFCMethod *self) {
     return CFCSymbol_get_exposure((CFCSymbol*)self);
 }
 
+CFCClass*
+CFCMethod_get_fresh_class(CFCMethod *self) {
+    return S_fresh_class(self);
+}
+
 int
 CFCMethod_is_fresh(CFCMethod *self, CFCClass *klass) {
     return S_fresh_class(self) == klass;
+}
+
+int
+CFCMethod_in_same_parcel(CFCMethod *self, CFCClass *klass) {
+    return CFCClass_in_same_parcel(S_fresh_class(self), klass);
 }
 
 int

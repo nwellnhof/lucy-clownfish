@@ -58,20 +58,6 @@ CFCBindMeth_method_def(CFCMethod *method, CFCClass *klass) {
     const char *ret_type_str = CFCType_to_c(return_type);
     const char *maybe_return = CFCType_is_void(return_type) ? "" : "return ";
 
-    // If the method is final and the class where it is declared final is in
-    // the same parcel as the invocant, we can optimize the call by resolving
-    // to the implementing function directly.
-    int optimized_final_meth = false;
-    if (CFCMethod_final(method)) {
-        CFCClass *ancestor = klass;
-        while (ancestor && !CFCMethod_is_fresh(method, ancestor)) {
-            ancestor = CFCClass_get_parent(ancestor);
-        }
-        if (CFCClass_in_same_parcel(ancestor, klass)) {
-            optimized_final_meth = true;
-        }
-    }
-
     const char innards_pattern[] =
         "    const %s method = (%s)cfish_obj_method(%s, %s);\n"
         "    %smethod(%s);\n"
@@ -79,7 +65,11 @@ CFCBindMeth_method_def(CFCMethod *method, CFCClass *klass) {
     char *innards = CFCUtil_sprintf(innards_pattern, full_typedef,
                                     full_typedef, self_name, full_offset_sym,
                                     maybe_return, arg_names);
-    if (optimized_final_meth) {
+
+    // If the method is final and the class where it is declared final is in
+    // the same parcel as the invocant, we can optimize the call by resolving
+    // to the implementing function directly.
+    if (CFCMethod_final(method) && CFCMethod_in_same_parcel(method, klass)) {
         CFCParcel  *parcel = CFCClass_get_parcel(klass);
         const char *privacy_sym = CFCParcel_get_privacy_sym(parcel);
         char *full_imp_sym = CFCMethod_imp_func(method);

@@ -283,10 +283,8 @@ CFCBindClass_to_c_data(CFCBindClass *self) {
     const char *ivars_offset = CFCClass_full_ivars_offset(client);
     const char *class_var    = CFCClass_full_class_var(client);
 
-    CFCMethod **methods  = CFCClass_methods(client);
-
-    char *offsets           = CFCUtil_strdup("");
-    char *method_defs       = CFCUtil_strdup("");
+    char       *offsets = CFCUtil_strdup("");
+    CFCMethod **methods = CFCClass_methods(client);
 
     for (int meth_num = 0; methods[meth_num] != NULL; meth_num++) {
         CFCMethod *method = methods[meth_num];
@@ -296,11 +294,16 @@ CFCBindClass_to_c_data(CFCBindClass *self) {
         offsets = CFCUtil_cat(offsets, "uint32_t ", full_offset_sym, ";\n",
                               NULL);
         FREEMEM(full_offset_sym);
+    }
 
-        int is_fresh = CFCMethod_is_fresh(method, client);
+    char       *method_defs   = CFCUtil_strdup("");
+    CFCMethod **fresh_methods = CFCClass_fresh_methods(client);
+
+    for (int meth_num = 0; fresh_methods[meth_num] != NULL; meth_num++) {
+        CFCMethod *method = fresh_methods[meth_num];
 
         // Create a default implementation for abstract methods.
-        if (is_fresh && CFCMethod_abstract(method)) {
+        if (CFCMethod_abstract(method)) {
             char *method_def = CFCBindMeth_abstract_method_def(method, client);
             method_defs = CFCUtil_cat(method_defs, method_def, "\n", NULL);
             FREEMEM(method_def);

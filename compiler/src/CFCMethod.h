@@ -217,10 +217,18 @@ CFCMethod_suppressed(CFCMethod *self);
 const char*
 CFCMethod_get_exposure(CFCMethod *self);
 
+struct CFCClass*
+CFCMethod_get_fresh_class(CFCMethod *self);
+
 /** Return true if the method is fresh in `klass`.
  */
 int
 CFCMethod_is_fresh(CFCMethod *self, struct CFCClass *klass);
+
+/** Return true if the method is fresh in the same parcel as `klass`.
+ */
+int
+CFCMethod_in_same_parcel(CFCMethod *self, struct CFCClass *klass);
 
 int
 CFCMethod_public(CFCMethod *self);
