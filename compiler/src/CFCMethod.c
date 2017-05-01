@@ -433,24 +433,13 @@ CFCMethod_get_param_list(CFCMethod *self) {
 }
 
 char*
-CFCMethod_imp_func(CFCMethod *self, CFCClass *klass) {
-    CFCClass *ancestor = klass;
-
-    while (ancestor) {
-        if (CFCMethod_is_fresh(self, ancestor)) { break; }
-        ancestor = CFCClass_get_parent(ancestor);
-    }
-    if (!ancestor) {
-        CFCUtil_die("No fresh method implementation found for '%s' in '%s'",
-                    CFCMethod_get_name(self), CFCClass_get_name(klass));
-    }
-
-    return S_full_method_sym(self, ancestor, "_IMP");
+CFCMethod_imp_func(CFCMethod *self) {
+    return S_full_method_sym(self, S_fresh_class(self), "_IMP");
 }
 
 char*
-CFCMethod_short_imp_func(CFCMethod *self, CFCClass *klass) {
-    return S_short_method_sym(self, klass, "_IMP");
+CFCMethod_short_imp_func(CFCMethod *self) {
+    return S_short_method_sym(self, S_fresh_class(self), "_IMP");
 }
 
 CFCDocuComment*

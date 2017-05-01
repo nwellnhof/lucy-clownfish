@@ -55,7 +55,7 @@ CFCBindMeth_abstract_method_def(struct CFCMethod *method,
 /** Return C code declaring the function which implements a method.
  */
 char*
-CFCBindMeth_imp_declaration(struct CFCMethod *method, struct CFCClass *klass);
+CFCBindMeth_imp_declaration(struct CFCMethod *method);
 
 /** Return a JSON fragment for method data specified by the host bindings
  * (alias or excluded).

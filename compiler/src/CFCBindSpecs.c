@@ -346,7 +346,7 @@ S_add_novel_meth(CFCBindSpecs *self, CFCMethod *method, CFCClass *klass,
         full_override_sym = CFCUtil_strdup("NULL");
     }
 
-    char *imp_func        = CFCMethod_imp_func(method, klass);
+    char *imp_func        = CFCMethod_imp_func(method);
     char *full_offset_sym = CFCMethod_full_offset_sym(method, klass);
 
     char pattern[] =
@@ -402,7 +402,7 @@ S_add_overridden_meth(CFCBindSpecs *self, CFCMethod *method, CFCClass *klass,
                       int meth_index) {
     const char *sep = meth_index == 0 ? "" : ",\n";
 
-    char *imp_func        = CFCMethod_imp_func(method, klass);
+    char *imp_func        = CFCMethod_imp_func(method);
     char *full_offset_sym = CFCMethod_full_offset_sym(method, klass);
     char *parent_offset   = S_parent_offset(self, method, klass, "overridden",
                                             meth_index);

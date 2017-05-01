@@ -42,7 +42,6 @@ CFCBindMeth_method_def(CFCMethod *method, CFCClass *klass) {
     char *full_meth_sym   = CFCMethod_full_method_sym(method, klass);
     char *full_offset_sym = CFCMethod_full_offset_sym(method, klass);
     char *full_typedef    = CFCMethod_full_typedef(method, klass);
-    char *full_imp_sym    = CFCMethod_imp_func(method, klass);
 
     // Prepare parameter lists, minus the type of the invoker.
     if (CFCParamList_variadic(param_list)) {
@@ -83,6 +82,7 @@ CFCBindMeth_method_def(CFCMethod *method, CFCClass *klass) {
     if (optimized_final_meth) {
         CFCParcel  *parcel = CFCClass_get_parcel(klass);
         const char *privacy_sym = CFCParcel_get_privacy_sym(parcel);
+        char *full_imp_sym = CFCMethod_imp_func(method);
         char *invoker_cast = CFCUtil_strdup("");
         if (!CFCMethod_is_fresh(method, klass)) {
             CFCType *self_type = CFCMethod_self_type(method);
@@ -102,6 +102,7 @@ CFCBindMeth_method_def(CFCMethod *method, CFCClass *klass) {
         FREEMEM(innards);
         innards = temp;
         FREEMEM(invoker_cast);
+        FREEMEM(full_imp_sym);
     }
 
     const char pattern[] =
@@ -115,7 +116,6 @@ CFCBindMeth_method_def(CFCMethod *method, CFCClass *klass) {
                           full_meth_sym, invoker_struct, params_end, innards);
 
     FREEMEM(innards);
-    FREEMEM(full_imp_sym);
     FREEMEM(full_offset_sym);
     FREEMEM(full_meth_sym);
     FREEMEM(full_typedef);
@@ -170,7 +170,7 @@ CFCBindMeth_abstract_method_def(CFCMethod *method, CFCClass *klass) {
         unreachable = CFCUtil_strdup("");
     }
 
-    char *full_func_sym = CFCMethod_imp_func(method, klass);
+    char *full_func_sym = CFCMethod_imp_func(method);
 
     char pattern[] =
         "%s\n"
@@ -191,13 +191,13 @@ CFCBindMeth_abstract_method_def(CFCMethod *method, CFCClass *klass) {
 }
 
 char*
-CFCBindMeth_imp_declaration(CFCMethod *method, CFCClass *klass) {
+CFCBindMeth_imp_declaration(CFCMethod *method) {
     CFCType      *return_type    = CFCMethod_get_return_type(method);
     CFCParamList *param_list     = CFCMethod_get_param_list(method);
     const char   *ret_type_str   = CFCType_to_c(return_type);
     const char   *param_list_str = CFCParamList_to_c(param_list);
 
-    char *full_imp_sym = CFCMethod_imp_func(method, klass);
+    char *full_imp_sym = CFCMethod_imp_func(method);
     char *buf = CFCUtil_sprintf("%s\n%s(%s);", ret_type_str,
                                 full_imp_sym, param_list_str);
 

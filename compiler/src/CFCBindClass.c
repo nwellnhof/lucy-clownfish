@@ -422,7 +422,7 @@ S_sub_declarations(CFCBindClass *self) {
     }
     for (int i = 0; fresh_methods[i] != NULL; i++) {
         CFCMethod *method = fresh_methods[i];
-        char *dec = CFCBindMeth_imp_declaration(method, self->client);
+        char *dec = CFCBindMeth_imp_declaration(method);
         declarations = CFCUtil_cat(declarations, dec, "\n\n", NULL);
         FREEMEM(dec);
     }
@@ -603,8 +603,8 @@ S_short_names(CFCBindClass *self) {
             CFCMethod *meth = fresh_methods[i];
 
             // Implementing functions.
-            char *short_imp = CFCMethod_short_imp_func(meth, client);
-            char *full_imp  = CFCMethod_imp_func(meth, client);
+            char *short_imp = CFCMethod_short_imp_func(meth);
+            char *full_imp  = CFCMethod_imp_func(meth);
             short_names = CFCUtil_cat(short_names, "  #define ", short_imp,
                                       " ", full_imp, "\n", NULL);
             FREEMEM(short_imp);

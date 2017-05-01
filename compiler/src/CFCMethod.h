@@ -226,10 +226,10 @@ struct CFCParamList*
 CFCMethod_get_param_list(CFCMethod *self);
 
 char*
-CFCMethod_imp_func(CFCMethod *self, struct CFCClass *klass);
+CFCMethod_imp_func(CFCMethod *self);
 
 char*
-CFCMethod_short_imp_func(CFCMethod *self, struct CFCClass *klass);
+CFCMethod_short_imp_func(CFCMethod *self);
 
 /** Return the DocuComment for the method, which may be inherited. If
  * `class_ptr` is non-NULL, use it to store the class where the comment
